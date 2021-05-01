@@ -4,4 +4,10 @@ It was a long long time ago in a galaxy far far awa, er, well, actually it was m
 
 As I remember this was a good time.  As my spawn Haydeez recalls it was a good time and at a recent 2600 meeting where we were discussing robotics and playing with some parts he had scored we talked about bringing botLarry back to life.
 
-As part of that this project was started.
+As part of that this project was started.  Haydeez thinks resurecting botlarry as a more physically interactive entity would be fun.  I think he might be right.
+
+1) Hardware
+
+2) Code controls for hardware
+
+3) Code personality
