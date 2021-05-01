@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+
+
 """ 
     dark.py
     
@@ -5,7 +8,6 @@
     Also we need to check that left or right was imput and if not generate help text and exit.
 
 """
-#!/usr/bin/python3
 
 import time
 import sys
@@ -33,7 +35,7 @@ if screenSide == 'left':
 elif screenSide == 'right':
     disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C) # right
 else :
-    sys.stderr.write("Usage: left or right\n")
+    raise SystemExit("Usage: left or right")
 
 # Initialize library.
 disp.begin()
