@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-
+import argparse
 import time
 import sys
 import Adafruit_GPIO.SPI as SPI
@@ -42,7 +42,7 @@ disp.begin()
 # Clear display.
 disp.clear()
 disp.display()
-
+print(disp)
 # Create blank image for drawing.
 # Make sure to create image with mode '1' for 1-bit color.
 width = disp.width
@@ -77,7 +77,7 @@ while True:
     toggle = (toggle + 1) % 2
     # Draw a black filled box to clear the image.
     draw.rectangle((0,0,width,height), outline=0, fill=0)
-
+    time.sleep(.5)
     # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
     cmd = "hostname -I | cut -d\' \' -f1"
     IP = subprocess.check_output(cmd, shell = True )
@@ -101,9 +101,10 @@ while True:
     # Display image.
     disp.image(image)
     disp.display()
-    time.sleep(.1)
-
-
+    time.sleep(5)
+# Clear display.
+    disp.clear()
+    disp.display()
 # Copyright (c) 2017 Adafruit Industries
 # Author: Tony DiCola & James DeVito
 #

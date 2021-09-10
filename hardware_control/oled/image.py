@@ -9,15 +9,16 @@ from PIL import Image
 # Raspberry Pi pin configuration:
 RST = 24
 # Note the following are only used with SPI:
-DC = 23
-SPI_PORT = 0
-SPI_DEVICE = 0
+# DC = 23
+# SPI_PORT = 0
+# SPI_DEVICE = 0
 
 try:
     screenSide = (sys.argv[1])
+    imageName = (sys.argv[2])
 
 except IndexError:
-    print( "Usage: left or right" )
+    print( "Usage: left or right and image name" )
     sys.exit(1)
 
 if screenSide == 'left':
@@ -25,6 +26,8 @@ if screenSide == 'left':
 elif screenSide == 'right':
     disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C) # right
 else :
+    raise SystemExit
+if len(imageName) < 2:
     raise SystemExit
 
 # Initialize library.
@@ -36,7 +39,7 @@ disp.display()
 
 # Load image based on OLED display height.  Note that image is converted to 1 bit color.
 if disp.height == 64:
-    image = Image.open('images/accre.ppm').convert('1')
+    image = Image.open(imageName).convert('1')
 else:
     image = Image.open('happycat_oled_32.ppm').convert('1')
 
@@ -46,8 +49,9 @@ else:
 # Display image.
 disp.image(image)
 disp.display()
-
-
+time.sleep(5)
+disp.clear()
+disp.display()
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
 #
