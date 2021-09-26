@@ -25,7 +25,7 @@ def randomcords():
     d = DIAMETER
     r = d/2
     while ((x_go + r > 120) or (x_go - r < 10) or (y_go + r > 54) or (y_go - r < 10)):
-        print(x_go,y_go,d)
+#        print(x_go,y_go,d)
         x_go = random.randrange(WIDTH)
         y_go = random.randrange(HEIGHT)
 #        d = random.randrange(DIAMETER)
@@ -68,10 +68,10 @@ while True:
 #    display.show()
     displeft.show()
     dispright.show()
-    time.sleep(0.5)
+#    time.sleep(0.5)
 #    display.fill(0)
-    displeft.fill(0)
-    dispright.fill(0)
+#    displeft.fill(0)
+#    dispright.fill(0)
 
 
 
