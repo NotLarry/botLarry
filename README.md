@@ -11,3 +11,21 @@ As part of that this project was started.  Haydeez thinks resurecting botlarry a
 2) Code controls for hardware
 
 3) Code personality
+
+
+
+==update==
+
+1) payphone
+  a) 3x4 keypad (7 pin)
+  b) off hook switch (2 pins, activates pin 1 on 20 pinout)
+  c) volume adjust (2 pins, should set 3 levels of output volume and have triggering this cycles).
+  d) handset
+    A) 2 pin to mouthpiece, connect to mic input on NUC
+    B) 2 pin to earpiece, connect to audio out on NUC
+2) Intel NUC
+4) usb=>gpio 
+
+
+
+
