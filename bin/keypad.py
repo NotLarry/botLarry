@@ -67,10 +67,11 @@ class keypad():
             if tmpRead == 0:
                 rowVal = i
                 
-        # if rowVal is not 0 thru 3 then no button was pressed and we can exit
-        if rowVal <0 data-blogger-escaped-or="" data-blogger-escaped-rowval="">3:
-            self.exit()
-            return
+        # if rowVal is not between 0 and 3 (inclusive), then no button was pressed and we can exit
+        if rowVal < 0 or rowVal > 3:
+          self.exit()
+        return
+
         
         # Convert columns to input
         for j in range(len(self.COLUMN)):
@@ -88,10 +89,10 @@ class keypad():
             if tmpRead == 1:
                 colVal=j
                 
-        # if colVal is not 0 thru 2 then no button was pressed and we can exit
-        if colVal <0 data-blogger-escaped-colval="" data-blogger-escaped-or="">2:
-            self.exit()
-            return
+        # if colVal is not between 0 and 2 (inclusive), then no button was pressed and we can exit
+        if colVal < 0 or colVal > 2:
+          self.exit()
+        return
 
         # Return the value of the key pressed
         self.exit()
@@ -114,7 +115,7 @@ if __name__ == '__main__':
         digit = kp.getKey()
     
     # Print the result
-    print digit  
+    print(digit)
 
 
 
