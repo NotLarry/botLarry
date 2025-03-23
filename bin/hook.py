@@ -16,7 +16,7 @@ import RPi.GPIO as GPIO
 from time import sleep
 GPIO.setmode(GPIO.BCM)
 
-pushpin = 21 
+pushpin = 4
 GPIO.setup(pushpin, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
 
 # this test simply watches gpio pushpin and prints the current state.

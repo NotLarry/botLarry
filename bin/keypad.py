@@ -12,6 +12,10 @@ keypad.py may be the heart of botlarry.  It will need to perform a signifigant a
     3) return to hook.py
 
 """
+from matrix_keypad import RPi_GPIO
+
+
+
 
 # the following is keypad code for the nodemcu.  This will need to be replaced.
 
