@@ -32,3 +32,9 @@ An update,
   Testing code made from https://www.circuitbasics.com/how-to-set-up-buttons-and-switches-on-the-raspberry-pi/
 
   Testing code from https://pypi.org/project/matrix_keypad/
+
+====phonehope====
+
+botLarry will now become a payphone
+currently a raspberry pi zero w
+
