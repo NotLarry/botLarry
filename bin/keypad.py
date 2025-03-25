@@ -11,91 +11,55 @@ keypad.py may be the heart of botlarry.  It will need to perform a signifigant a
     2) if it does not have an entry call audio.py with 'number is not assigned' mp3
     3) return to hook.py
 
-"""
 
-# #####################################################
-# Python Library for 3x4 matrix keypad using
-# 7 of the avialable GPIO pins on the Raspberry Pi. 
-# 
-# This could easily be expanded to handle a 4x4 but I 
-# don't have one for testing. The KEYPAD constant 
-# would need to be updated. Also the setting/checking
-# of the colVal part would need to be expanded to 
-# handle the extra column.
-# 
-# Written by Chris Crumpacker
-# May 2013
-#
-# main structure is adapted from Bandono's
-# matrixQPI which is wiringPi based.
-# https://github.com/bandono/matrixQPi?source=cc
-# #####################################################
+Stole this code from chatbot
+"""
 import RPi.GPIO as GPIO
 import time
 
-class Keypad():
-    # CONSTANTS
-    KEYPAD = [
-        [1, 2, 3],    # 6
-        [4, 5, 6],    # 1
-        [7, 8, 9],    # 2
-        ["*", 0, "#"] # 4
-    ]   # 5  7  3
+# Set up GPIO mode
+GPIO.setmode(GPIO.BCM)
 
-    ROW = [26, 19, 13, 6]  # Row GPIO pins, matrix 5, 7, 3
-    COLUMN = [21, 20, 16]  # Column GPIO pins, patrix 6, 1, 2, 4
+# Define GPIO pins for rows and columns
+rows = [26, 13, 6, 5]    # GPIO pins for rows
+cols = [21, 20, 16]      # GPIO pins for columns
 
-    def __init__(self):
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)  # Disable warnings for GPIO setup
+# Keypad mapping (3x4)
+keypad = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['*', '0', '#']
+]
 
-        # Set up rows as inputs with pull-up resistors
-        for row in self.ROW:
-            GPIO.setup(row, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        
-        # Set up columns as outputs
-        for col in self.COLUMN:
-            GPIO.setup(col, GPIO.OUT)
-            GPIO.output(col, GPIO.HIGH)  # Initialize columns as HIGH
+# Set up the GPIO pins for rows as inputs with pull-ups
+for row in rows:
+    GPIO.setup(row, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-    def getKey(self):
-        # Scan through rows
-        for i in range(len(self.ROW)):
-            # Set the current row to output LOW, others stay HIGH
-            GPIO.setup(self.ROW[i], GPIO.OUT)
-            GPIO.output(self.ROW[i], GPIO.LOW)
+# Set up the GPIO pins for columns as outputs
+for col in cols:
+    GPIO.setup(col, GPIO.OUT)
+    GPIO.output(col, GPIO.HIGH)  # Set columns high initially
 
-            # Check the columns
-            for j in range(len(self.COLUMN)):
-                if GPIO.input(self.COLUMN[j]) == GPIO.LOW:
-                    # Key is pressed
-                    print(f"Key detected: {self.KEYPAD[i][j]} (Row: {i}, Column: {j})")  # Debug output
-                    GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                    return self.KEYPAD[i][j]
+# Function to detect key press
+def get_key():
+    for col_idx, col in enumerate(cols):
+        GPIO.output(col, GPIO.LOW)  # Set current column to LOW
+        for row_idx, row in enumerate(rows):
+            if GPIO.input(row) == GPIO.LOW:  # Check if button is pressed
+                GPIO.output(col, GPIO.HIGH)  # Reset column state
+                return keypad[row_idx][col_idx]  # Return the key that was pressed
+        GPIO.output(col, GPIO.HIGH)  # Reset column state
+    return None
 
-            # Reset the row to input after scanning
-            GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-        return None  # No key is pressed
-
-    def exit(self):
-        # Reinitialize all rows and columns as input at exit
-        for i in range(len(self.ROW)):
-            GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        for j in range(len(self.COLUMN)):
-            GPIO.setup(self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-if __name__ == '__main__':
-    # Initialize the keypad class
-    kp = Keypad()
-
-    # Loop while waiting for a keypress
-    digit = None
-    while digit is None:
-        digit = kp.getKey()
-        time.sleep(0.2)  # Debounce delay
-
-    # Print the result
-    print(f"Key pressed: {digit}")
-    kp.exit()
+try:
+    print("Waiting for keypress...")
+    while True:
+        key = get_key()  # Check for key press
+        if key:
+            print(f"Key pressed: {key}")
+            time.sleep(0.5)  # Debounce delay
+        time.sleep(0.1)  # Reduce CPU usage when no key is pressed
+finally:
+    GPIO.cleanup()  # Clean up GPIO on exit
 
