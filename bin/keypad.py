@@ -30,93 +30,72 @@ keypad.py may be the heart of botlarry.  It will need to perform a signifigant a
 # matrixQPI which is wiringPi based.
 # https://github.com/bandono/matrixQPi?source=cc
 # #####################################################
-
 import RPi.GPIO as GPIO
+import time
 
-class keypad():
-    # CONSTANTS   
+class Keypad():
+    # CONSTANTS
     KEYPAD = [
-    [1,2,3],
-    [4,5,6],
-    [7,8,9],
-    ["*",0,"#"]
-    ]
-    
-    ROW         = [26,19,13,6]
-    COLUMN      = [21,20,16]
-    
+        [1, 2, 3],    # 6
+        [4, 5, 6],    # 1
+        [7, 8, 9],    # 2
+        ["*", 0, "#"] # 4
+    ]   # 5  7  3
+
+    ROW = [26, 19, 13, 6]  # Row GPIO pins, matrix 5, 7, 3
+    COLUMN = [21, 20, 16]  # Column GPIO pins, patrix 6, 1, 2, 4
+
     def __init__(self):
         GPIO.setmode(GPIO.BCM)
-    
+        GPIO.setwarnings(False)  # Disable warnings for GPIO setup
+
+        # Set up rows as inputs with pull-up resistors
+        for row in self.ROW:
+            GPIO.setup(row, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        
+        # Set up columns as outputs
+        for col in self.COLUMN:
+            GPIO.setup(col, GPIO.OUT)
+            GPIO.output(col, GPIO.HIGH)  # Initialize columns as HIGH
+
     def getKey(self):
-        
-        # Set all columns as output low
-        for j in range(len(self.COLUMN)):
-            GPIO.setup(self.COLUMN[j], GPIO.OUT)
-            GPIO.output(self.COLUMN[j], GPIO.LOW)
-        
-        # Set all rows as input
+        # Scan through rows
         for i in range(len(self.ROW)):
+            # Set the current row to output LOW, others stay HIGH
+            GPIO.setup(self.ROW[i], GPIO.OUT)
+            GPIO.output(self.ROW[i], GPIO.LOW)
+
+            # Check the columns
+            for j in range(len(self.COLUMN)):
+                if GPIO.input(self.COLUMN[j]) == GPIO.LOW:
+                    # Key is pressed
+                    print(f"Key detected: {self.KEYPAD[i][j]} (Row: {i}, Column: {j})")  # Debug output
+                    GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                    return self.KEYPAD[i][j]
+
+            # Reset the row to input after scanning
             GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        
-        # Scan rows for pushed key/button
-        # A valid key press should set "rowVal"  between 0 and 3.
-        rowVal = -1
-        for i in range(len(self.ROW)):
-            tmpRead = GPIO.input(self.ROW[i])
-            if tmpRead == 0:
-                rowVal = i
-                
-        # if rowVal is not between 0 and 3 (inclusive), then no button was pressed and we can exit
-        if rowVal < 0 or rowVal > 3:
-          self.exit()
-        return
 
-        
-        # Convert columns to input
-        for j in range(len(self.COLUMN)):
-                GPIO.setup(self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        
-        # Switch the i-th row found from scan to output
-        GPIO.setup(self.ROW[rowVal], GPIO.OUT)
-        GPIO.output(self.ROW[rowVal], GPIO.HIGH)
+        return None  # No key is pressed
 
-        # Scan columns for still-pushed key/button
-        # A valid key press should set "colVal"  between 0 and 2.
-        colVal = -1
-        for j in range(len(self.COLUMN)):
-            tmpRead = GPIO.input(self.COLUMN[j])
-            if tmpRead == 1:
-                colVal=j
-                
-        # if colVal is not between 0 and 2 (inclusive), then no button was pressed and we can exit
-        if colVal < 0 or colVal > 2:
-          self.exit()
-        return
-
-        # Return the value of the key pressed
-        self.exit()
-        return self.KEYPAD[rowVal][colVal]
-        
     def exit(self):
         # Reinitialize all rows and columns as input at exit
         for i in range(len(self.ROW)):
-                GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+            GPIO.setup(self.ROW[i], GPIO.IN, pull_up_down=GPIO.PUD_UP)
         for j in range(len(self.COLUMN)):
-                GPIO.setup(self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        
+            GPIO.setup(self.COLUMN[j], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 if __name__ == '__main__':
     # Initialize the keypad class
-    kp = keypad()
-    
+    kp = Keypad()
+
     # Loop while waiting for a keypress
     digit = None
-    while digit == None:
+    while digit is None:
         digit = kp.getKey()
-    
+        time.sleep(0.2)  # Debounce delay
+
     # Print the result
-    print(digit)
-
-
-
+    print(f"Key pressed: {digit}")
+    kp.exit()
 
