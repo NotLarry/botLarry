@@ -22,7 +22,7 @@ GPIO.setmode(GPIO.BCM)
 
 # Define GPIO pins for rows and columns
 rows = [26, 13, 6, 5]    # GPIO pins for rows
-cols = [21, 20, 16]      # GPIO pins for columns
+cols = [22, 27, 17]      # GPIO pins for columns
 
 # Keypad mapping (3x4)
 keypad = [
