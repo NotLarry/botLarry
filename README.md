@@ -52,7 +52,8 @@
 ====phonehope====
 
 botLarry will now become a payphone
-
+The idea is I will have recordings of myself (or others) and when you dial a number it plays an mp3 
+Years later my kids can fire it up and hear their fathers voice
 
 
 
