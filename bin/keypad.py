@@ -1,19 +1,3 @@
-"""
-keypad.py may be the heart of botlarry.  It will need to perform a signifigant amount of the process.
-
-1) send dailtone to earpiece. (timeout 20 seconds)
-2) when a key is pressed send a tone specific to that key to the earpiece, record the digit
-3) When 10 digits have been processed
-4) Check if first digit is '1', if so call audio.py with local calls only, then return to dialtone
-5) check the first 3 digits for area code.
-  a) for 666 area codes look up the 10 digit # in database
-    1) if it has an entry call audio.py with coresponding mp3 file
-    2) if it does not have an entry call audio.py with 'number is not assigned' mp3
-    3) return to hook.py
-
-
-Stole this code from chatbot
-"""
 import RPi.GPIO as GPIO
 import time
 
@@ -52,14 +36,31 @@ def get_key():
         GPIO.output(col, GPIO.HIGH)  # Reset column state
     return None
 
-try:
-    print("Waiting for keypress...")
-    while True:
+# Function to collect and save 10 digits
+def collect_digits():
+    digits = []
+    while len(digits) < 10:
         key = get_key()  # Check for key press
-        if key:
+        if key and key.isdigit():  # Only collect digit keys
+            digits.append(key)
             print(f"Key pressed: {key}")
-            time.sleep(0.5)  # Debounce delay
+            time.sleep(0.5)  # Debounce delay to prevent multiple presses
         time.sleep(0.1)  # Reduce CPU usage when no key is pressed
+    
+    # Print and save the collected digits
+    print(f"Digits recorded: {''.join(digits)}")
+    with open("digits.txt", "a") as file:
+        file.write("".join(digits) + "\n")
+    
+    return digits
+
+try:
+    print("Waiting for 10 digits...")
+    while True:
+        collect_digits()  # Collect 10 digits
+        print("Waiting for the next 10 digits...")
+        time.sleep(1)  # Wait for a second before starting the next round
+
 finally:
     GPIO.cleanup()  # Clean up GPIO on exit
 
