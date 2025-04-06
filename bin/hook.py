@@ -14,9 +14,9 @@ try:
     while True:
                     # Read the switch state
         if GPIO.input(switch_pin) == GPIO.HIGH:
-            print("open")
+            print("hook")
         else:
-            print("closed")
+            print("offhook")
         time.sleep(0.1)  # Check the state every 100ms
 
 except KeyboardInterrupt:
