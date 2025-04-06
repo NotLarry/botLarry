@@ -25,14 +25,17 @@ for col in cols:
     GPIO.setup(col, GPIO.OUT)
     GPIO.output(col, GPIO.HIGH)  # Set columns high initially
 
-# Function to detect key press
+# Function to detect key press with improved debounce
 def get_key():
     for col_idx, col in enumerate(cols):
         GPIO.output(col, GPIO.LOW)  # Set current column to LOW
         for row_idx, row in enumerate(rows):
             if GPIO.input(row) == GPIO.LOW:  # Check if button is pressed
-                GPIO.output(col, GPIO.HIGH)  # Reset column state
-                return keypad[row_idx][col_idx]  # Return the key that was pressed
+                # Debounce the keypress by waiting a short time before registering it
+                time.sleep(0.05)  # Short sleep to allow for proper key reading
+                if GPIO.input(row) == GPIO.LOW:  # Check again to confirm it's still pressed
+                    GPIO.output(col, GPIO.HIGH)  # Reset column state
+                    return keypad[row_idx][col_idx]  # Return the key that was pressed
         GPIO.output(col, GPIO.HIGH)  # Reset column state
     return None
 
@@ -44,8 +47,8 @@ def collect_digits():
         if key and key.isdigit():  # Only collect digit keys
             digits.append(key)
             print(f"Key pressed: {key}")
-            time.sleep(0.5)  # Debounce delay to prevent multiple presses
-        time.sleep(0.1)  # Reduce CPU usage when no key is pressed
+            time.sleep(0.3)  # Debounce delay to prevent multiple presses of the same key
+        time.sleep(0.05)  # Shorter wait time to detect next key faster
     
     # Print and save the collected digits
     print(f"Digits recorded: {''.join(digits)}")
