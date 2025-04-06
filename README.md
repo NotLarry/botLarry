@@ -71,5 +71,6 @@ Years later my kids can fire it up and hear their fathers voice, creepy right?:)
 
 
 
-"Some of this code was generated with the help of OpenAI's ChatGPT."
+"Some of this code was generated with the help of OpenAI's ChatGPT."  When I asked the robot how to attribute it, it told me not to worry about it.  
+I guess code developed from stollen code is fair game?  I don't think so.  I will do my best to attibute any specific code I get with the help of ChatGPT.
 
