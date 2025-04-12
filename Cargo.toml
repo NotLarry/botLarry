@@ -1,0 +1,8 @@
+[package]
+name = "botLarry"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rppal = "0.14"
+ctrlc = "3.4"
