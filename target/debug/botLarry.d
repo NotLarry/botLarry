@@ -1,1 +1,1 @@
-/home/notlarry/botLarry/rust/botLarry/target/debug/botLarry: /home/notlarry/botLarry/rust/botLarry/src/main.rs
+/home/notlarry/botLarry/target/debug/botLarry: /home/notlarry/botLarry/src/main.rs
