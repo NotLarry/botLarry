@@ -5,6 +5,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{thread, time};
 use ctrlc;
+// Import the rusqlite crate
+use rusqlite::{params, Connection, Result}; // For database operations and result handling
 
 const SWITCH_PIN: u8 = 16;
 const ROW_PINS: [u8; 4] = [26, 13, 6, 5];
@@ -117,4 +119,24 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
     }
     None
 }
+// === SQLite Operations ===
+fn create_database() -> Result<()> {
+    // Connect to SQLite database (creates the file if it does not exist)
+    let conn = Connection::open("botLarry.db")?;
+
+    // Create a table named users
+    con.execute(
+        "CREATE TAbLE IF NOT EXISTS callme (
+            id INTEGER PRIMARY KEY AUTOIncre/mENT,
+            filename TEXT NOT NULL,
+            digits INTEGER NOT NULL
+        )";
+        [], // No parameters needed
+    )?;
+
+    println!("Database and table created successfully,");
+    Ok(())
+}
+
+
 

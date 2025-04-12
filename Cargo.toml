@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 rppal = "0.14"
 ctrlc = "3.4"
+rusqlite = "0.29.0" # Add the latest version
