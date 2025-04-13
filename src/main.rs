@@ -4,6 +4,8 @@ use std::sync::Arc;
 use std::{thread, time};
 use ctrlc;
 use rusqlite::{params, Connection, Result};
+use rusqlite::OptionalExtension;
+use std::env;
 
 const SWITCH_PIN: u8 = 16;
 const ROW_PINS: [u8; 4] = [26, 13, 6, 5];
@@ -17,6 +19,8 @@ const KEYPAD: [[char; 3]; 4] = [
 ];
 
 fn main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
+
     let gpio = Gpio::new().expect("Failed to access GPIO");
     let switch = gpio.get(SWITCH_PIN).unwrap().into_input_pullup();
 
@@ -31,6 +35,12 @@ fn main() -> Result<()> {
         )",
         [],
     )?;
+
+    // If --show-calls flag is present, display logs and exit
+    if args.len() > 1 && args[1] == "--show-calls" {
+        show_call_logs(&conn)?;
+        return Ok(());
+    }
 
     let running = Arc::new(AtomicBool::new(true));
     let is_offhook = Arc::new(AtomicBool::new(false));
@@ -105,15 +115,31 @@ fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn: &C
     println!("📋 Digits recorded: {}", digit_string);
 
     let (areacode, phonenumber) = digit_string.split_at(3);
-    let recording_path = format!("recording/{}.mp3", digit_string);
 
-    conn.execute(
-        "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
-        params![areacode, phonenumber, recording_path],
-    )
-    .expect("Failed to insert call record");
+    let mut stmt = conn.prepare(
+        "SELECT recording_path FROM calls WHERE areacode = ?1 AND phonenumber = ?2"
+    ).expect("Failed to prepare SELECT");
 
-    println!("💾 Call logged to DB. Ready for next call...");
+    let existing: Option<String> = stmt
+        .query_row(params![areacode, phonenumber], |row| row.get(0))
+        .optional()
+        .expect("Failed to query DB");
+
+    match existing {
+        Some(path) => {
+            println!("📀 Number already logged. Recording path: {}", path);
+        }
+        None => {
+            let recording_path = format!("recordings/{}.mp3", digit_string);
+            conn.execute(
+                "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
+                params![areacode, phonenumber, recording_path],
+            )
+            .expect("Failed to insert call record");
+
+            println!("💾 New call logged. Recording path: {}", recording_path);
+        }
+    }
 }
 
 fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
@@ -131,5 +157,32 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
         col.set_high();
     }
     None
+}
+
+fn show_call_logs(conn: &Connection) -> Result<()> {
+    let mut stmt = conn.prepare(
+        "SELECT id, areacode, phonenumber, recording_path, timestamp FROM calls ORDER BY timestamp DESC"
+    )?;
+
+    let call_iter = stmt.query_map([], |row| {
+        Ok((
+            row.get::<_, i32>(0)?,
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+            row.get::<_, String>(3)?,
+            row.get::<_, String>(4)?,
+        ))
+    })?;
+
+    println!("\n 📄 Call Log:");
+    for call in call_iter {
+        let (id, areacode, number, recording, timestamp) = call?;
+        println!(
+            "[{}] ({}) {} => {} at {}",
+            id, areacode, number, recording, timestamp
+        );
+    }
+
+    Ok(())
 }
 
