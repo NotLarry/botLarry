@@ -1,10 +1,9 @@
 use rppal::gpio::{Gpio, InputPin, OutputPin, Level};
-use std::fs::OpenOptions;
-use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::{thread, time};
 use ctrlc;
+use rusqlite::{params, Connection, Result};
 
 const SWITCH_PIN: u8 = 16;
 const ROW_PINS: [u8; 4] = [26, 13, 6, 5];
@@ -17,14 +16,25 @@ const KEYPAD: [[char; 3]; 4] = [
     ['*', '0', '#'],
 ];
 
-fn main() {
+fn main() -> Result<()> {
     let gpio = Gpio::new().expect("Failed to access GPIO");
     let switch = gpio.get(SWITCH_PIN).unwrap().into_input_pullup();
+
+    let conn = Connection::open("calls.db")?;
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS calls (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            areacode TEXT NOT NULL,
+            phonenumber TEXT NOT NULL,
+            recording_path TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )",
+        [],
+    )?;
 
     let running = Arc::new(AtomicBool::new(true));
     let is_offhook = Arc::new(AtomicBool::new(false));
 
-    // Ctrl+C handler
     {
         let running = running.clone();
         ctrlc::set_handler(move || {
@@ -34,7 +44,6 @@ fn main() {
         .expect("Error setting Ctrl-C handler");
     }
 
-    // Main loop
     while running.load(Ordering::SeqCst) {
         let hook_state = switch.read();
 
@@ -43,7 +52,7 @@ fn main() {
             is_offhook.store(true, Ordering::SeqCst);
 
             while switch.read() == Level::Low && running.load(Ordering::SeqCst) {
-                collect_digits(&gpio, &running, &switch);
+                collect_digits(&gpio, &running, &switch, &conn);
             }
 
             println!("📴 Onhook detected. Resetting...");
@@ -54,11 +63,10 @@ fn main() {
     }
 
     println!("👋 Goodbye. GPIO will clean up automatically.");
+    Ok(())
 }
 
-// === KEYPAD HANDLING ===
-
-fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin) {
+fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn: &Connection) {
     let rows: Vec<InputPin> = ROW_PINS
         .iter()
         .map(|&pin| gpio.get(pin).unwrap().into_input_pullup())
@@ -96,15 +104,16 @@ fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin) {
     let digit_string: String = digits.iter().collect();
     println!("📋 Digits recorded: {}", digit_string);
 
-    let mut file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("digits.txt")
-        .expect("Failed to open digits.txt");
+    let (areacode, phonenumber) = digit_string.split_at(3);
+    let recording_path = format!("recording/{}.mp3", digit_string);
 
-    writeln!(file, "{}", digit_string).expect("Failed to write digits");
+    conn.execute(
+        "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
+        params![areacode, phonenumber, recording_path],
+    )
+    .expect("Failed to insert call record");
 
-    println!("🔁 Ready for next call...");
+    println!("💾 Call logged to DB. Ready for next call...");
 }
 
 fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
