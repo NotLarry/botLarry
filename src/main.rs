@@ -2,16 +2,16 @@ mod cli;
 mod gpio;
 mod db;
 mod keypad;
+mod hook; // <-- NEW MODULE
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
 use crate::keypad::collect_digits;
 use crate::db::init_db;
+use crate::hook::handle_hook_state; // <-- USE NEW FUNCTION
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-use std::{thread, time};
-use std::env;
-use rppal::gpio::Level;
+use std::{env};
 use ctrlc;
 
 const SWITCH_PIN: u8 = 16;
@@ -37,23 +37,7 @@ fn main() -> rusqlite::Result<()> {
         }).expect("Error setting Ctrl-C handler");
     }
 
-    while running.load(Ordering::SeqCst) {
-        let hook_state = switch.read();
-
-        if hook_state == Level::Low && !is_offhook.load(Ordering::SeqCst) {
-            println!("📞 Offhook detected. Starting keypad entry...");
-            is_offhook.store(true, Ordering::SeqCst);
-
-            while switch.read() == Level::Low && running.load(Ordering::SeqCst) {
-                collect_digits(&gpio, &running, &switch, &conn);
-            }
-
-            println!("📴 Onhook detected. Resetting...");
-            is_offhook.store(false, Ordering::SeqCst);
-        }
-
-        thread::sleep(time::Duration::from_millis(100));
-    }
+    handle_hook_state(&gpio, &switch, running.clone(), is_offhook.clone(), &conn);
 
     println!("👋 Goodbye. GPIO will clean up automatically.");
     Ok(())
