@@ -6,7 +6,6 @@ mod hook; // <-- NEW MODULE
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
-use crate::keypad::collect_digits;
 use crate::db::init_db;
 use crate::hook::handle_hook_state; // <-- USE NEW FUNCTION
 
@@ -14,7 +13,7 @@ use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::{env};
 use ctrlc;
 
-const SWITCH_PIN: u8 = 16;
+const SWITCH_PIN: u8 = 26;
 
 fn main() -> db::Result<()> {
     let args: Vec<String> = env::args().collect();
