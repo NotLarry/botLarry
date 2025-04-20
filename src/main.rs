@@ -16,7 +16,7 @@ use ctrlc;
 
 const SWITCH_PIN: u8 = 16;
 
-fn main() -> rusqlite::Result<()> {
+fn main() -> db::Result<()> {
     let args: Vec<String> = env::args().collect();
 
     let (gpio, switch) = setup_gpio(SWITCH_PIN);

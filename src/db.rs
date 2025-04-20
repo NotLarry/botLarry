@@ -1,4 +1,5 @@
-use rusqlite::{params, Connection, Result};
+use rusqlite::{params, Connection};
+pub use rusqlite::Result;
 
 pub fn init_db() -> Result<Connection> {
     std::fs::create_dir_all("data")?; // Ensure folder exists
