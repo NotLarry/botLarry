@@ -5,7 +5,9 @@ use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
 
-const ROW_PINS: [u8; 4] = [26, 13, 6, 5];
+// const ROW_PINS: [u8; 4] = [26, 13, 6, 5];
+// changes for using raspberry pi 5
+const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
 const COL_PINS: [u8; 3] = [22, 27, 17];
 
 const KEYPAD: [[char; 3]; 4] = [
