@@ -1,4 +1,4 @@
-use rusqlite::{params, Connection};
+use rusqlite::{Connection};
 pub use rusqlite::Result;
 
 pub fn init_db() -> Result<Connection> {
