@@ -2,7 +2,7 @@ use rusqlite::{Connection};
 pub use rusqlite::Result;
 
 pub fn init_db() -> Result<Connection> {
-    std::fs::create_dir_all("data")?; // Ensure folder exists
+    std::fs::create_dir_all("data").map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
     let conn = Connection::open("data/calls.db")?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS calls (
