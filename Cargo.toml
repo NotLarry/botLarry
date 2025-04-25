@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rppal = "0.14"
+rppal = "0.22.1"
 ctrlc = "3.4"
-rusqlite = { version = "0.34.0", features = ["bundled"] } # Add the latest version
+rusqlite = { version = "0.35.0", features = ["bundled"] } # Add the latest version

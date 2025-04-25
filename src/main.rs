@@ -2,12 +2,12 @@ mod cli;
 mod gpio;
 mod db;
 mod keypad;
-mod hook; // <-- NEW MODULE
+mod hook;
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
 use crate::db::init_db;
-use crate::hook::handle_hook_state; // <-- USE NEW FUNCTION
+use crate::hook::handle_hook_state;
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::{env};
