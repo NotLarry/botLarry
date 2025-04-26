@@ -77,3 +77,21 @@ I guess code developed from stollen code is fair game?  I don't think so.  I wil
 
 Testing doing this in rust instead of python
 
+On a side note, I'm putting this here for posterity
+
+
+"NotLarry's origin story.
+
+I had moved into a house with my two best friends.
+We checked pets on the lease because I had a ferret (polyester).
+When we moved in there was a cross eyed siamese kitten and we joked that they left that because we checked pets on the lease.
+We could not agree on a name.
+Then  on August 8, 1989 watching Letterman the top 10 list was
+
+Top 10 Demands of the Striking Telephone Workers
+ 2. The right to call everyone "Larry" -- as in: "Thank you for using
+    AT&T, Larry."
+
+I said, we can call him Larry, and my roommate said 'his name is not Larry'
+it stuck.
+it is now my true identity, and honors a long gone cat."
