@@ -20,4 +20,5 @@ digits.txt
 .vscode/
 .idea/
 *.code-workspace
-
+# === music files ===
+/music/
