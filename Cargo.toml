@@ -7,3 +7,5 @@ edition = "2024"
 rppal = "0.22.1"
 ctrlc = "3.4"
 rusqlite = { version = "0.35.0", features = ["bundled"] } # Add the latest version
+rodio = "0.17"
+cpal = "0.15"
