@@ -2,6 +2,10 @@
 /target/
 **/*.rs.bk
 
+# ignore projects from the rust programing language
+/projects/
+**/*.rs.bk
+
 # === Backup & Temp Files ===
 *.swp
 *.swo
