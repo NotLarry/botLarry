@@ -7,3 +7,9 @@ pub fn setup_gpio(switch_pin: u8) -> (Gpio, InputPin) {
     (gpio, switch)
 }
 
+pub fn coin_collect() {
+    let pin = Gpio::new().unwrap().get(5).unwrap().into_output();
+    pin.set_high();
+    std::thread::sleep(std::time::Duration::from_millis(500));
+    pin.set_low();
+}
