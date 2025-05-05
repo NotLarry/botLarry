@@ -3,6 +3,7 @@ mod gpio;
 mod db;
 mod keypad;
 mod hook;
+//mod tone;
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
