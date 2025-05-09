@@ -3,9 +3,11 @@ mod gpio;
 mod db;
 mod keypad;
 mod hook;
-mod coin_collect;
+//mod coin_collect;
 //mod tone;
+//mod coin;
 
+//use crate::coin::CoinInputs;
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
 use crate::db::init_db;

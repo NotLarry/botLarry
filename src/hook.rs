@@ -3,6 +3,7 @@ use std::{thread, time};
 use rusqlite::Connection;
 use rppal::gpio::{InputPin, Gpio, Level};
 use crate::keypad::collect_digits;
+// use crate::coin_collect;
 
 pub fn handle_hook_state(
     gpio: &Gpio,
