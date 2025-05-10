@@ -6,6 +6,10 @@
 /projects/
 **/*.rs.bk
 
+# ignore recording 
+/recordings/
+**/*.mp3
+
 # === Backup & Temp Files ===
 *.swp
 *.swo
