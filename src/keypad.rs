@@ -4,6 +4,7 @@ use std::sync::{atomic::{AtomicBool, Ordering}};
 use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
+use crate::playback::play_mp3_blocking_until_onhook;
 
 // const ROW_PINS: [u8; 4] = [26, 13, 6, 5];
 // changes for using raspberry pi 5
@@ -67,20 +68,21 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
         .optional()
         .expect("Failed to query DB");
 
-    match existing {
-        Some(path) => {
-            println!("📀 Number already logged. Recording path: {}", path);
-        }
-        None => {
-            conn.execute(
-                "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
-                params![areacode, phonenumber, recording_path],
-            ).expect("Failed to insert call record");
+match existing {
+    Some(path) => {
+        println!("📀 Number already logged. Recording path: {}", path);
+        play_mp3_blocking_until_onhook(switch, &path);
+    }
+    None => {
+        conn.execute(
+            "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
+            params![areacode, phonenumber, recording_path],
+        ).expect("Failed to insert call record");
 
-            println!("💾 New call logged. Recording path: {}", recording_path);
-        }
+        println!("💾 New call logged. Recording path: {}", recording_path);
     }
 }
+
 
 fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
     for (col_idx, col) in cols.iter_mut().enumerate() {
@@ -98,4 +100,4 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
     }
     None
 }
-
+}

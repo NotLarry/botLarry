@@ -3,6 +3,7 @@ mod gpio;
 mod db;
 mod keypad;
 mod hook;
+mod playback;
 //mod coin_collect;
 //mod tone;
 //mod coin;
