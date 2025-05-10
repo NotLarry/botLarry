@@ -1,3 +1,7 @@
+This should be an up to date list of the GPIO pins in use but 
+I am pretty sure it is out of date.
+
+
 coin_collection.py
   GPIO 4
 keypad.py
