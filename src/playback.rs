@@ -10,6 +10,8 @@ static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(N
 /// Starts looping the dial tone in the background
 pub fn start_dial_tone(audio_device: &str) {
     let child = Command::new("mpg123")
+        .arg("--loop")
+        .arg("-1")
         .arg("-a")
         .arg(audio_device)
         .arg("utility/dial_tone.mp3")

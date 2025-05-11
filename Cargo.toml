@@ -10,3 +10,4 @@ rusqlite = { version = "0.35.0", features = ["bundled"] } # Add the latest versi
 rodio = "0.17"
 cpal = "0.15"
 once_cell = "1.18"
+alsa = "0.7"
