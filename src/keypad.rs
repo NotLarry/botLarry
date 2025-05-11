@@ -4,9 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
+use crate::playback::{start_dial_tone, stop_dial_tone, play_keypress_beep, play_mp3_blocking_until_onhook};
 
-use crate::playback::play_mp3_blocking_until_onhook;
-
+// Pin mappings
 const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
 const COL_PINS: [u8; 3] = [22, 27, 17];
 
@@ -35,14 +35,22 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
     let mut digits = Vec::new();
     println!("⌨️  Waiting for 10 digits...");
 
+    let audio_device = "hw:0,0"; // Adjust to your headset audio device
+    start_dial_tone(audio_device);
+
     while digits.len() < 10 {
         if !running.load(Ordering::SeqCst) || switch.read() == Level::High {
             println!("❌ Digit entry canceled (on-hook or Ctrl+C).");
+            stop_dial_tone();
             return;
         }
 
         if let Some(key) = get_key(&rows, &mut cols) {
             if key.is_ascii_digit() {
+                if digits.is_empty() {
+                    stop_dial_tone();
+                }
+                play_keypress_beep(audio_device);
                 digits.push(key);
                 println!("✅ Key pressed: {}", key);
                 thread::sleep(time::Duration::from_millis(300));
@@ -101,3 +109,4 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
     }
     None
 }
+

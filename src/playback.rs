@@ -35,7 +35,7 @@ pub fn play_keypress_beep(device: &str) {
     let _ = Command::new("mpg123")
         .arg("-a")
         .arg(device)
-        .arg("recordings/utility/keypress.mp3")
+        .arg("utility/keypress.mp3")
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
@@ -71,7 +71,7 @@ pub fn play_mp3_blocking_until_onhook(switch: &InputPin, main_path: &str) {
         true
     }
 
-    if !play_file_blocking(switch, "recordings/utility/ringing.mp3", device) {
+    if !play_file_blocking(switch, "utility/ringing.mp3", device) {
         return;
     }
 
