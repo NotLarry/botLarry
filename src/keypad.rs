@@ -101,4 +101,3 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
     }
     None
 }
-

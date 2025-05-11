@@ -29,8 +29,9 @@ pub fn handle_hook_state(
             println!("📞 Offhook detected. Starting keypad entry...");
             is_offhook_flag.store(true, Ordering::SeqCst);
 
-            collect_digits(gpio, &running, switch, conn);
-
+            while is_offhook(switch) && running.load(Ordering::SeqCst) {
+                collect_digits(gpio, &running, switch, conn);
+            }
 
             println!("📴 Onhook detected. Resetting...");
             is_offhook_flag.store(false, Ordering::SeqCst);

@@ -81,6 +81,7 @@ version = "0.1.0"
 dependencies = [
  "cpal",
  "ctrlc",
+ "once_cell",
  "rodio",
  "rppal",
  "rusqlite",
