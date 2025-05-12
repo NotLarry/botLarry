@@ -1,5 +1,6 @@
 use std::process::{Command, Child, Stdio};
-use std::sync::{Arc, Mutex};
+//use std::sync::{Arc, Mutex};
+use std::sync::{Mutex};
 use std::thread;
 use std::time::Duration;
 use rppal::gpio::{InputPin, Level};

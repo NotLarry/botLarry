@@ -1,5 +1,5 @@
 use rppal::gpio::{Gpio, InputPin, OutputPin, Level};
-use std::process::Command;
+//use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time};
 use rusqlite::{params, Connection};
