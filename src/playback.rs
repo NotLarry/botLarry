@@ -33,16 +33,24 @@ pub fn stop_dial_tone() {
     *proc_lock = None;
 }
 
-/// Plays the keypress beep once (blocking)
-pub fn play_keypress_beep(device: &str) {
+/// Plays the coresponding mp3 file for dtmf tone
+pub fn play_keypress_beep(device: &str, digit: char) {
+    let filename = match digit {
+        '0'..='9' => format!("utility/dtmf/{}.mp3", digit),
+        '*' => "utility/dtmf/star.mp3".to_string(),
+        '#' => "utility/dtmf/hash.mp3".to_string(),
+        _ => return, // Ignore unsupported keys
+    };
+
     let _ = Command::new("mpg123")
         .arg("-a")
         .arg(device)
-        .arg("utility/keypress.mp3")
+        .arg(filename)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
 }
+
 
 /// (Optional) Plays ringing.mp3 then a main file, both interruptible on hook
 pub fn play_mp3_blocking_until_onhook(switch: &InputPin, main_path: &str) {
