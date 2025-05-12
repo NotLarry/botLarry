@@ -106,7 +106,7 @@ This should be an up to date list of the GPIO pins in use but
 I am pretty sure it is out of date.
 
 
-
+<pre>
 
 12Vrelay +    3.3V        [01] [02]      5V
               GPIO2 [SDA] [03] [04]      5V
@@ -128,3 +128,5 @@ kbd Col 1     GPIO22      [15] [16]      GPIO23    kbd Row 4
               GPIO19      [35] [36]      GPIO16    kbd Row 1
 HOOK +        GPIO26      [37] [38]      GPIO20
 HOOK -        GND ⏚       [39] [40]      GPIO21
+</pre>
+"""
