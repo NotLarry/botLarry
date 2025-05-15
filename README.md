@@ -23,6 +23,9 @@
                                  \________________/
 
 
+A quick note: The content is going to be the hardest part.  If you know NotLarry and either want to create an anecdote about him, or remind him of something he should add, please reach out to notlarry@hotmmail.com
+
+
 TL;DR - botLarry is currently a project that will populate a payphone with audio files from myself, or from my friends.  
 The idea being that in this day and age I can leave my family and friends an artifact they can revisit memories of me with.  
 
