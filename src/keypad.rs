@@ -35,7 +35,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
     let mut digits = Vec::new();
     println!("⌨️  Waiting for 10 digits...");
 
-    let audio_device = "hw:0,0"; // Adjust to your headset audio device
+    let audio_device = "hw:1,0"; // Adjust to your headset audio device
     start_dial_tone(audio_device);
 
     while digits.len() < 10 {
