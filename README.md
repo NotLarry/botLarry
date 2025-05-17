@@ -109,6 +109,9 @@ This should be an up to date list of the GPIO  pins in use but
 I am pretty sure it is out of date.
 
 
+
+Raspberry pi 5 pinout
+
 <pre>
 
 12Vrelay pwr-----3.3V                  [01] [02]      5V Power
@@ -131,5 +134,22 @@ Volume control---GPIO 5                [29] [30]      GND ⏚
                  GPIO 19 (PCM_FS)      [35] [36]      GPIO 16-------kbd Row 1
 HOOK +   --------GPIO 26               [37] [38]      GPIO 20 (PCM_din)
 HOOK -   --------GND ⏚                 [39] [40]      GPIO 21 (PCM_dout)
+</pre>
+
+
+Telephone Pinout
+
+<pre>
+
+                  Red Hook             [01] [02]      Red Receiver      
+                  Black Hook           [03] [04]      Yellow Mic 
+                  Green Receiver       [05] [06]      Keyboard 6 (column) 
+                  J6                   [07] [08]      Keyboard 1 (column)      
+                  Keyboard 5 (row)     [09] [10]      Keyboard 2 (column)      
+                  Keyboard 7 (row)     [11] [12]      Keyboard 4 (column)      
+                  Keyboard 3 (row)     [13] [14]      
+                                       [15] [16]      
+                                       [17] [18]      
+                  Piezio +             [19] [20]      Piezio - 
 </pre>
 """
