@@ -1,4 +1,8 @@
-# botLarry
+▌   ▗ ▖         
+▛▌▛▌▜▘▌ ▀▌▛▘▛▘▌▌
+▙▌▙▌▐▖▙▖█▌▌ ▌ ▙▌
+              ▄▌
+
                      botlarry comes with ABSOLUTELY NO WARRANTY.
 
                                   ________________                       
