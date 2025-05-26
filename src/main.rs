@@ -23,6 +23,7 @@ const SWITCH_PIN: u8 = 26;
 
 fn main() -> db::Result<()> {
     tone::init_tone_thread("hw:0,0");
+    println!("✅ init_tone_thread called from main");
 
     let args: Vec<String> = env::args().collect();
 

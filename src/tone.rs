@@ -13,6 +13,7 @@ pub fn init_tone_thread(audio_device: &'static str) {
     });
 
     thread::spawn(move || {
+        println!("🎧 Tone thread started"); // confirm tone thread launched
         for digit in rx {
             println!("🎵 Playing tone for: {}", digit);
             let dtmf = match digit {
@@ -42,6 +43,7 @@ let mut child = Command::new("sox")
 }
 
 pub fn play_dtmf_tone(digit: char) {
+    println!("📨 Sending digit to tone thread: {}", digit);
     if let Some(sender) = SENDER.get() {
         let _ = sender.lock().unwrap().send(digit);
     } else {
