@@ -1,20 +1,20 @@
 use std::process::{Command, Child, Stdio};
-//use std::sync::{Arc, Mutex};
-use std::sync::{Mutex};
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 use rppal::gpio::{InputPin, Level};
 use once_cell::sync::Lazy;
 
-// Global handle to the dial tone process
+// Shared process handle for any background tone (dial or ring)
 static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
-/// Starts looping the dial tone in the background
+
+/// Starts a digital dial tone in the background (350 Hz + 440 Hz, continuous)
 pub fn start_dial_tone(audio_device: &str) {
     let child = Command::new("sox")
         .args([
             "-n",
             "-t", "alsa", audio_device,
-            "synth", "0",  // 0 means infinite duration
+            "synth", "0",  // infinite duration
             "sin", "350",
             "sin", "440",
             "channels", "2",
@@ -28,9 +28,27 @@ pub fn start_dial_tone(audio_device: &str) {
     *proc_lock = Some(child);
 }
 
+/// Starts a digitally synthesized US-style telephone ring (440+480 Hz, 2s on, 4s off)
+pub fn start_ringing_tone(audio_device: &str) {
+    let child = Command::new("sox")
+        .args([
+            "-n",
+            "-t", "alsa", audio_device,
+            "synth", "2.0", "sin", "440", "sin", "480",  // 2 seconds tone
+            "pad", "0", "4.0",                            // 4 seconds silence
+            "repeat", "9999",                             // loop
+            "channels", "2",
+        ])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("Failed to start ringing tone");
 
+    let mut proc_lock = DIAL_TONE_PROCESS.lock().unwrap();
+    *proc_lock = Some(child);
+}
 
-/// Stops the dial tone if it is running
+/// Stops the background tone (dial or ring)
 pub fn stop_dial_tone() {
     let mut proc_lock = DIAL_TONE_PROCESS.lock().unwrap();
     if let Some(child) = proc_lock.as_mut() {
@@ -39,8 +57,7 @@ pub fn stop_dial_tone() {
     *proc_lock = None;
 }
 
-
-/// (Optional) Plays ringing.mp3 then a main file, both interruptible on hook
+/// Plays ringing.mp3 then main file, interruptible if switch reads high (on-hook)
 pub fn play_mp3_blocking_until_onhook(switch: &InputPin, main_path: &str) {
     let device = "hw:0,0";
 
