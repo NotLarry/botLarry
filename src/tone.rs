@@ -1,9 +1,44 @@
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, Child};
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
+use once_cell::sync::Lazy;
 
 static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
+static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
+
+pub fn start_dial_tone(audio_device: &str) {
+    let mut lock = DIAL_TONE_PROCESS.lock().unwrap();
+
+    if lock.is_some() {
+        return; // Already playing
+    }
+
+    let child = Command::new("sox")
+        .args([
+            "-n",
+            "-t", "alsa",
+            audio_device,
+            "synth", "-",  // Continuous
+            "sin", "350",
+            "sin", "440",
+        ])
+        .spawn()
+        .expect("Failed to start dial tone");
+
+    *lock = Some(child);
+}
+
+pub fn stop_dial_tone() {
+    let mut lock = DIAL_TONE_PROCESS.lock().unwrap();
+    if let Some(mut child) = lock.take() {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+}
+
+
+
 
 pub fn init_tone_thread(audio_device: &'static str) {
     let (tx, rx): (Sender<char>, Receiver<char>) = std::sync::mpsc::channel();
