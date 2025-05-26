@@ -10,18 +10,24 @@ use once_cell::sync::Lazy;
 static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
 /// Starts looping the dial tone in the background
 pub fn start_dial_tone(audio_device: &str) {
-    let child = Command::new("mpg123")
-        .arg("--loop")
-        .arg("-1")
-        .arg("-a")
-        .arg(audio_device)
-        .arg("utility/dial_tone.mp3")
+    let child = Command::new("sox")
+        .args([
+            "-n",
+            "-t", "alsa", audio_device,
+            "synth", "0",  // 0 means infinite duration
+            "sin", "350",
+            "sin", "440",
+            "channels", "2",
+        ])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .spawn()
-        .expect("Failed to play dial tone");
+        .expect("Failed to start digital dial tone");
 
     let mut proc_lock = DIAL_TONE_PROCESS.lock().unwrap();
     *proc_lock = Some(child);
 }
+
 
 
 /// Stops the dial tone if it is running

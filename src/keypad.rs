@@ -38,8 +38,8 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
     println!("⌨️  Waiting for 10 digits...");
 
     let audio_device = "hw:0,0"; // Adjust to your headset audio device
-    start_dial_tone(audio_device);
-
+//    start_dial_tone(audio_device);
+    start_dial_tone("hw:0,0");
     while digits.len() < 10 {
         if !running.load(Ordering::SeqCst) || switch.read() == Level::High {
             println!("❌ Digit entry canceled (on-hook or Ctrl+C).");
