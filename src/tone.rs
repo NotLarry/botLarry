@@ -1,89 +1,108 @@
-use std::time::Duration;
-use std::sync::{Arc, Mutex};
-use alsa::{self, pcm::{Format, HwParams, Access}};
-use alsa::pcm::{PCM, HwParamsSet, PCMAccess, PCMFormat};
+use std::process::{Command, Stdio, Child};
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::{Mutex, OnceLock};
+use std::thread;
+use once_cell::sync::Lazy;
 
-const SAMPLE_RATE: u32 = 8000; // 8kHz sample rate for DTMF
+static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
+static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
 
-// DTMF frequencies for digits 0-9 and symbols * and #
-const DTMF_TONES: [(f64, f64); 12] = [
-    (697.0, 1209.0), // 1
-    (697.0, 1336.0), // 2
-    (697.0, 1477.0), // 3
-    (770.0, 1209.0), // 4
-    (770.0, 1336.0), // 5
-    (770.0, 1477.0), // 6
-    (852.0, 1209.0), // 7
-    (852.0, 1336.0), // 8
-    (852.0, 1477.0), // 9
-    (941.0, 1209.0), // 0
-    (941.0, 1336.0), // *
-    (941.0, 1477.0), // #
-];
+pub fn start_dial_tone(audio_device: &str) {
+    let mut lock = DIAL_TONE_PROCESS.lock().unwrap();
 
-pub fn play_dtmf_tone(digit: char, duration_ms: u64) {
-    let (low_freq, high_freq) = match digit {
-        '1' => DTMF_TONES[0],
-        '2' => DTMF_TONES[1],
-        '3' => DTMF_TONES[2],
-        '4' => DTMF_TONES[3],
-        '5' => DTMF_TONES[4],
-        '6' => DTMF_TONES[5],
-        '7' => DTMF_TONES[6],
-        '8' => DTMF_TONES[7],
-        '9' => DTMF_TONES[8],
-        '0' => DTMF_TONES[9],
-        '*' => DTMF_TONES[10],
-        '#' => DTMF_TONES[11],
-        _ => return,
-    };
-
-    // Generate the tone waveform
-    let low_wave = generate_sine_wave(low_freq, duration_ms);
-    let high_wave = generate_sine_wave(high_freq, duration_ms);
-
-    // Combine the two tones (this is mono, so add the waves together)
-    let tone = combine_tones(&low_wave, &high_wave);
-
-    // Play the generated tone via ALSA
-    play_pcm(tone);
-}
-
-fn generate_sine_wave(frequency: f64, duration_ms: u64) -> Vec<i16> {
-    let num_samples = (SAMPLE_RATE as f64 * duration_ms as f64 / 1000.0) as usize;
-    let mut samples = Vec::with_capacity(num_samples);
-    let two_pi = 2.0 * std::f64::consts::PI;
-    for i in 0..num_samples {
-        let sample = (two_pi * frequency * i as f64 / SAMPLE_RATE as f64).sin();
-        samples.push((sample * std::i16::MAX as f64) as i16);
+    if lock.is_some() {
+        return; // Already playing
     }
-    samples
+
+    let child = Command::new("sox")
+        .args([
+            "-n",
+            "-t", "alsa",
+            audio_device,
+            "synth", "-",  // Continuous
+            "sin", "350",
+            "sin", "440",
+        ])
+        .spawn()
+        .expect("Failed to start dial tone");
+
+    *lock = Some(child);
 }
 
-fn combine_tones(low_wave: &[i16], high_wave: &[i16]) -> Vec<i16> {
-    let mut combined = Vec::with_capacity(low_wave.len());
-    for (low, high) in low_wave.iter().zip(high_wave.iter()) {
-        let combined_sample = low.saturating_add(*high);
-        combined.push(combined_sample);
+pub fn stop_dial_tone() {
+    let mut lock = DIAL_TONE_PROCESS.lock().unwrap();
+    if let Some(mut child) = lock.take() {
+        let _ = child.kill();
+        let _ = child.wait();
     }
-    combined
 }
 
-fn play_pcm(tone: Vec<i16>) {
-    let pcm = PCM::open("default", alsa::Direction::Playback, false)
-        .expect("Failed to open PCM device");
 
-    let hwp = HwParams::any(&pcm).expect("Failed to get hardware params");
-    hwp.set_rate(SAMPLE_RATE).expect("Failed to set rate");
-    hwp.set_channels(1).expect("Failed to set channels");
-    hwp.set_format(PCMFormat::S16LE).expect("Failed to set format");
 
-    let buffer = tone.iter().map(|&sample| sample as i8).collect::<Vec<i8>>();
 
-    let pcm = pcm.prepare().expect("Failed to prepare PCM");
+pub fn init_tone_thread(audio_device: &'static str) {
+    let (tx, rx): (Sender<char>, Receiver<char>) = std::sync::mpsc::channel();
 
-    pcm.writei(&buffer)
-        .expect("Failed to write PCM data");
+    SENDER.set(Mutex::new(tx)).unwrap_or_else(|_| {
+        eprintln!("⚠️ Tone thread already initialized");
+    });
+
+    thread::spawn(move || {
+        println!("🎧 Tone thread started"); // confirm tone thread launched
+        for digit in rx {
+            println!("🎵 Playing tone for: {}", digit);
+            let dtmf = match digit {
+                '0'..='9' | '*' | '#' => digit.to_string(),
+                _ => continue,
+            };
+
+let mut child = Command::new("sox")
+    .args([
+        "-n",
+        "-c", "2",                  // 👈 Set to 1 for mono output
+        "-t", "alsa",
+        audio_device,
+        "synth", "0.2",
+        "sin", &dtmf_freq1(&dtmf),
+        "sin", &dtmf_freq2(&dtmf),
+    ])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .spawn()
+    .expect("Failed to spawn sox for tone");
+
+
+            let _ = child.wait();
+        }
+    });
 }
 
+pub fn play_dtmf_tone(digit: char) {
+    println!("📨 Sending digit to tone thread: {}", digit);
+    if let Some(sender) = SENDER.get() {
+        let _ = sender.lock().unwrap().send(digit);
+    } else {
+        eprintln!("❌ Tone thread not initialized");
+    }
+}
+
+// Dummy freq calculator — replace with real values if needed
+fn dtmf_freq1(d: &str) -> String {
+    match d {
+        "1" | "2" | "3" => "697",
+        "4" | "5" | "6" => "770",
+        "7" | "8" | "9" => "852",
+        "*" | "0" | "#" => "941",
+        _ => "0",
+    }.to_string()
+}
+
+fn dtmf_freq2(d: &str) -> String {
+    match d {
+        "1" | "4" | "7" | "*" => "1209",
+        "2" | "5" | "8" | "0" => "1336",
+        "3" | "6" | "9" | "#" => "1477",
+        _ => "0",
+    }.to_string()
+}
 

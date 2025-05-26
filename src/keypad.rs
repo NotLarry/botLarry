@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
-use crate::playback::{start_dial_tone, stop_dial_tone, play_keypress_beep, play_mp3_blocking_until_onhook};
+use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};
+use crate::tone::play_dtmf_tone;
+
 
 // Pin mappings
 const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
@@ -36,8 +38,8 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
     println!("⌨️  Waiting for 10 digits...");
 
     let audio_device = "hw:0,0"; // Adjust to your headset audio device
-    start_dial_tone(audio_device);
-
+//    start_dial_tone(audio_device);
+    start_dial_tone("hw:0,0");
     while digits.len() < 10 {
         if !running.load(Ordering::SeqCst) || switch.read() == Level::High {
             println!("❌ Digit entry canceled (on-hook or Ctrl+C).");
@@ -50,7 +52,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
                 if digits.is_empty() {
                     stop_dial_tone();
                 }
-                play_keypress_beep(audio_device, key);
+              play_dtmf_tone(key);
                 digits.push(key);
                 println!("✅ Key pressed: {}", key);
                 thread::sleep(time::Duration::from_millis(300));
@@ -78,7 +80,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
         Some(path) => {
             println!("📀 Number already logged. Recording path: {}", path);
             println!("▶️ Playing recording: {}", path);
-            play_mp3_blocking_until_onhook(switch, &path);
+            play_digital_ring_then_mp3(switch, &path);
             println!("✅ Playback finished.");
         }
         None => {
