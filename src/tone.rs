@@ -1,67 +1,71 @@
-// src/tone.rs
-use std::f32::consts::PI;
-use std::io::Write;
 use std::process::{Command, Stdio};
+use std::sync::mpsc::{Sender, Receiver};
+use std::sync::{Mutex, OnceLock};
 use std::thread;
 
-const SAMPLE_RATE: u32 = 48000;
-const DURATION_SECS: f32 = 0.2;
+static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
 
-pub fn play_dtmf_tone(digit: char, device: &str) {
-    if let Some((f1, f2)) = dtmf_freqs(digit) {
-        let samples = generate_tone_samples(f1, f2, DURATION_SECS);
-        play_raw_audio(&samples, device);
+pub fn init_tone_thread(audio_device: &'static str) {
+    let (tx, rx): (Sender<char>, Receiver<char>) = std::sync::mpsc::channel();
+
+    SENDER.set(Mutex::new(tx)).unwrap_or_else(|_| {
+        eprintln!("⚠️ Tone thread already initialized");
+    });
+
+    thread::spawn(move || {
+        for digit in rx {
+            println!("🎵 Playing tone for: {}", digit);
+            let dtmf = match digit {
+                '0'..='9' | '*' | '#' => digit.to_string(),
+                _ => continue,
+            };
+
+let mut child = Command::new("sox")
+    .args([
+        "-n",
+        "-c", "2",                  // 👈 Set to 1 for mono output
+        "-t", "alsa",
+        audio_device,
+        "synth", "0.2",
+        "sin", &dtmf_freq1(&dtmf),
+        "sin", &dtmf_freq2(&dtmf),
+    ])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .spawn()
+    .expect("Failed to spawn sox for tone");
+
+
+            let _ = child.wait();
+        }
+    });
+}
+
+pub fn play_dtmf_tone(digit: char) {
+    if let Some(sender) = SENDER.get() {
+        let _ = sender.lock().unwrap().send(digit);
+    } else {
+        eprintln!("❌ Tone thread not initialized");
     }
 }
 
-fn dtmf_freqs(digit: char) -> Option<(f32, f32)> {
-    match digit {
-        '1' => Some((697.0, 1209.0)),
-        '2' => Some((697.0, 1336.0)),
-        '3' => Some((697.0, 1477.0)),
-        '4' => Some((770.0, 1209.0)),
-        '5' => Some((770.0, 1336.0)),
-        '6' => Some((770.0, 1477.0)),
-        '7' => Some((852.0, 1209.0)),
-        '8' => Some((852.0, 1336.0)),
-        '9' => Some((852.0, 1477.0)),
-        '0' => Some((941.0, 1336.0)),
-        '*' => Some((941.0, 1209.0)),
-        '#' => Some((941.0, 1477.0)),
-        _ => None,
-    }
+// Dummy freq calculator — replace with real values if needed
+fn dtmf_freq1(d: &str) -> String {
+    match d {
+        "1" | "2" | "3" => "697",
+        "4" | "5" | "6" => "770",
+        "7" | "8" | "9" => "852",
+        "*" | "0" | "#" => "941",
+        _ => "0",
+    }.to_string()
 }
 
-fn generate_tone_samples(freq1: f32, freq2: f32, duration_secs: f32) -> Vec<i16> {
-    let num_samples = (SAMPLE_RATE as f32 * duration_secs) as usize;
-    let mut samples = Vec::with_capacity(num_samples);
-
-    for n in 0..num_samples {
-        let t = n as f32 / SAMPLE_RATE as f32;
-        let sample = (0.5 * (f32::sin(2.0 * PI * freq1 * t) + f32::sin(2.0 * PI * freq2 * t)) * i16::MAX as f32) as i16;
-        samples.push(sample);
-    }
-
-    samples
-}
-
-fn play_raw_audio(samples: &[i16], device: &str) {
-    let mut child = Command::new("aplay")
-        .args(["-f", "S16_LE", "-c", "2", "-r", &SAMPLE_RATE.to_string(), "-D", device])
-        .stdin(Stdio::piped())
-        .spawn()
-        .expect("Failed to start aplay");
-
-    if let Some(stdin) = child.stdin.as_mut() {
-        let bytes = unsafe {
-            std::slice::from_raw_parts(
-                samples.as_ptr() as *const u8,
-                samples.len() * std::mem::size_of::<i16>(),
-            )
-        };
-        stdin.write_all(bytes).ok();
-    }
-
-    let _ = child.wait();
+fn dtmf_freq2(d: &str) -> String {
+    match d {
+        "1" | "4" | "7" | "*" => "1209",
+        "2" | "5" | "8" | "0" => "1336",
+        "3" | "6" | "9" | "#" => "1477",
+        _ => "0",
+    }.to_string()
 }
 

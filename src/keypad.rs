@@ -52,7 +52,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
                 if digits.is_empty() {
                     stop_dial_tone();
                 }
-                play_dtmf_tone(key, audio_device);
+              play_dtmf_tone(key);
                 digits.push(key);
                 println!("✅ Key pressed: {}", key);
                 thread::sleep(time::Duration::from_millis(300));
