@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
-use crate::playback::{start_dial_tone, stop_dial_tone, play_mp3_blocking_until_onhook};
+use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};
 use crate::tone::play_dtmf_tone;
 
 
@@ -80,7 +80,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
         Some(path) => {
             println!("📀 Number already logged. Recording path: {}", path);
             println!("▶️ Playing recording: {}", path);
-            play_mp3_blocking_until_onhook(switch, &path);
+            play_digital_ring_then_mp3(switch, &path);
             println!("✅ Playback finished.");
         }
         None => {

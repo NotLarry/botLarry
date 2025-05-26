@@ -57,40 +57,53 @@ pub fn stop_dial_tone() {
     *proc_lock = None;
 }
 
-/// Plays ringing.mp3 then main file, interruptible if switch reads high (on-hook)
-pub fn play_mp3_blocking_until_onhook(switch: &InputPin, main_path: &str) {
+/// Plays a digital ring tone, then a main file, both interruptible on hook
+pub fn play_digital_ring_then_mp3(switch: &InputPin, main_path: &str) {
     let device = "hw:0,0";
 
-    fn play_file_blocking(switch: &InputPin, path: &str, device: &str) -> bool {
-        let mut child = Command::new("mpg123")
-            .arg("-a")
-            .arg(device)
-            .arg(path)
-            .spawn()
-            .ok();
+    // Start digital ringing
+    start_ringing_tone(device);
 
-        while let Some(ref mut c) = child {
-            if switch.read() == Level::High {
-                let _ = c.kill();
-                let _ = c.wait();
-                println!("⏹️ On-hook detected. Playback interrupted.");
-                return false;
-            }
+    // Wait while off-hook or until ring timeout (~12 seconds max ring time)
+    let mut waited = 0;
+    while switch.read() == Level::Low && waited < 120 {
+        thread::sleep(Duration::from_millis(100));
+        waited += 1;
+    }
 
-            match c.try_wait() {
-                Ok(Some(_)) => return true,
-                Ok(None) => thread::sleep(Duration::from_millis(100)),
-                Err(_) => return false,
-            }
+    // Stop ringing
+    stop_dial_tone();
+
+    // If the call was picked up (still off-hook), play the main file
+    if switch.read() == Level::Low {
+        let _ = play_file_blocking(switch, main_path, device);
+    }
+}
+
+/// Helper: play MP3 file interruptible on hook
+fn play_file_blocking(switch: &InputPin, path: &str, device: &str) -> bool {
+    let mut child = Command::new("mpg123")
+        .arg("-a")
+        .arg(device)
+        .arg(path)
+        .spawn()
+        .ok();
+
+    while let Some(ref mut c) = child {
+        if switch.read() == Level::High {
+            let _ = c.kill();
+            let _ = c.wait();
+            println!("⏹️ On-hook detected. Playback interrupted.");
+            return false;
         }
 
-        true
+        match c.try_wait() {
+            Ok(Some(_)) => return true,
+            Ok(None) => thread::sleep(Duration::from_millis(100)),
+            Err(_) => return false,
+        }
     }
 
-    if !play_file_blocking(switch, "utility/ringing.mp3", device) {
-        return;
-    }
-
-    let _ = play_file_blocking(switch, main_path, device);
+    true
 }
 
