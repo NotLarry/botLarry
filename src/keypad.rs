@@ -4,7 +4,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
-use crate::playback::{start_dial_tone, stop_dial_tone, play_keypress_beep, play_mp3_blocking_until_onhook};
+use crate::playback::{start_dial_tone, stop_dial_tone, play_mp3_blocking_until_onhook};
+use crate::tone::play_dtmf_tone;
+
 
 // Pin mappings
 const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
@@ -50,7 +52,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
                 if digits.is_empty() {
                     stop_dial_tone();
                 }
-                play_keypress_beep(audio_device, key);
+                play_dtmf_tone(key, audio_device);
                 digits.push(key);
                 println!("✅ Key pressed: {}", key);
                 thread::sleep(time::Duration::from_millis(300));

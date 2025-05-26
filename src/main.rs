@@ -4,6 +4,7 @@ mod db;
 mod keypad;
 mod hook;
 mod playback;
+mod tone;
 //mod coin_collect;
 //mod tone;
 //mod coin;
@@ -20,30 +21,10 @@ use ctrlc;
 
 const SWITCH_PIN: u8 = 26;
 
-fn main() -> db::Result<()> {
-    let args: Vec<String> = env::args().collect();
 
-    let (gpio, switch) = setup_gpio(SWITCH_PIN);
-    let conn = init_db()?;
-
-    if handle_cli_args(&args, &conn) {
-        return Ok(());
-    }
-
-    let running = Arc::new(AtomicBool::new(true));
-    let is_offhook = Arc::new(AtomicBool::new(false));
-
-    {
-        let running = running.clone();
-        ctrlc::set_handler(move || {
-            println!("\nCtrl+C pressed. Exiting...");
-            running.store(false, Ordering::SeqCst);
-        }).expect("Error setting Ctrl-C handler");
-    }
-
-    handle_hook_state(&gpio, &switch, running.clone(), is_offhook.clone(), &conn);
-
-    println!("👋 Goodbye. GPIO will clean up automatically.");
-    Ok(())
+fn main() {
+    tone::play_dtmf_tone('5', "hw:0,0");
 }
+
+
 
