@@ -1,11 +1,12 @@
 use rppal::gpio::{Gpio, InputPin, OutputPin, Level};
-//use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
 use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};
 use crate::tone::play_dtmf_tone;
+use crate::recording::handle_unknown_number;
+use chrono::Local;
 
 
 // Pin mappings
@@ -84,14 +85,26 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
             println!("✅ Playback finished.");
         }
         None => {
-            let recording_path = format!("recordings/{}.mp3", digit_string);
-            conn.execute(
-                "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
-                params![areacode, phonenumber, &recording_path],
-            ).expect("Failed to insert call record");
+            println!("📞 Unknown number. Starting recording...");
+            let success = handle_unknown_number(gpio, switch, &digit_string);
 
-            println!("💾 New call logged. Recording path: {}", recording_path);
+            if success {
+                let area_code = &digit_string[0..3];
+                let timestamp = Local::now().format("%Y%m%d%H%M%S").to_string();
+                let recording_path = format!("recordings/{}/{}-{}.mp3", area_code, digit_string, timestamp);
+        
+                conn.execute(
+                    "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
+                    params![area_code, &digit_string[3..], &recording_path],
+                ).expect("Failed to insert call record");
+        
+                println!("💾 New call logged. Recording path: {}", recording_path);
+            } else {
+                println!("❌ Recording not finalized. Not saving to database.");
+            }
         }
+
+
     }
 }
 
