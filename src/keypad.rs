@@ -111,11 +111,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
         }
         None => {
             if handle_unknown_number(&rows, &mut cols, switch, &digit_string) {
-                let recording_path = format!("recordings/{}/{}-{}.mp3",
-                    areacode,
-                    digit_string,
-                    Local::now().format("%Y%m%d%H%M%S")
-                );
+                let recording_path = format!("/botLarry/recordings/{}/{}.mp3", areacode, digit_string);
                 conn.execute(
                     "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
                     params![areacode, phonenumber, &recording_path],
