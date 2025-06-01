@@ -1,17 +1,17 @@
 use rppal::gpio::{Gpio, InputPin, OutputPin, Level};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{thread, time};
+use std::{thread, time::Duration};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
+use chrono::Local;
+
 use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};
 use crate::tone::play_dtmf_tone;
 use crate::recording::handle_unknown_number;
-use chrono::Local;
-
 
 // Pin mappings
-const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
-const COL_PINS: [u8; 3] = [22, 27, 17];
+pub const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
+pub const COL_PINS: [u8; 3] = [22, 27, 17];
 
 const KEYPAD: [[char; 3]; 4] = [
     ['1', '2', '3'],
@@ -19,6 +19,32 @@ const KEYPAD: [[char; 3]; 4] = [
     ['7', '8', '9'],
     ['*', '0', '#'],
 ];
+
+pub fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
+    for (col_idx, col) in cols.iter_mut().enumerate() {
+        col.set_low();
+        for (row_idx, row) in rows.iter().enumerate() {
+            if row.read() == Level::Low {
+                thread::sleep(Duration::from_millis(50));
+                if row.read() == Level::Low {
+                    col.set_high();
+                    return Some(KEYPAD[row_idx][col_idx]);
+                }
+            }
+        }
+        col.set_high();
+    }
+    None
+}
+
+pub fn wait_for_keypress(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> char {
+    loop {
+        if let Some(key) = get_key(rows, cols) {
+            return key;
+        }
+        thread::sleep(Duration::from_millis(50));
+    }
+}
 
 pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn: &Connection) {
     let rows: Vec<InputPin> = ROW_PINS
@@ -38,9 +64,8 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
     let mut digits = Vec::new();
     println!("⌨️  Waiting for 10 digits...");
 
-    let audio_device = "hw:0,0"; // Adjust to your headset audio device
-//    start_dial_tone(audio_device);
     start_dial_tone("hw:0,0");
+
     while digits.len() < 10 {
         if !running.load(Ordering::SeqCst) || switch.read() == Level::High {
             println!("❌ Digit entry canceled (on-hook or Ctrl+C).");
@@ -53,14 +78,14 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
                 if digits.is_empty() {
                     stop_dial_tone();
                 }
-              play_dtmf_tone(key);
+                play_dtmf_tone(key);
                 digits.push(key);
                 println!("✅ Key pressed: {}", key);
-                thread::sleep(time::Duration::from_millis(300));
+                thread::sleep(Duration::from_millis(300));
             }
         }
 
-        thread::sleep(time::Duration::from_millis(50));
+        thread::sleep(Duration::from_millis(50));
     }
 
     let digit_string: String = digits.iter().collect();
@@ -85,43 +110,22 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
             println!("✅ Playback finished.");
         }
         None => {
-            println!("📞 Unknown number. Starting recording...");
-            let success = handle_unknown_number(gpio, switch, &digit_string);
-
-            if success {
-                let area_code = &digit_string[0..3];
-                let timestamp = Local::now().format("%Y%m%d%H%M%S").to_string();
-                let recording_path = format!("recordings/{}/{}-{}.mp3", area_code, digit_string, timestamp);
-        
+            if handle_unknown_number(&rows, &mut cols, switch, &digit_string) {
+                let recording_path = format!("recordings/{}/{}-{}.mp3",
+                    areacode,
+                    digit_string,
+                    Local::now().format("%Y%m%d%H%M%S")
+                );
                 conn.execute(
                     "INSERT INTO calls (areacode, phonenumber, recording_path) VALUES (?1, ?2, ?3)",
-                    params![area_code, &digit_string[3..], &recording_path],
+                    params![areacode, phonenumber, &recording_path],
                 ).expect("Failed to insert call record");
-        
+
                 println!("💾 New call logged. Recording path: {}", recording_path);
             } else {
-                println!("❌ Recording not finalized. Not saving to database.");
+                println!("⚠️ Recording aborted — not logging call.");
             }
         }
-
-
     }
-}
-
-fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
-    for (col_idx, col) in cols.iter_mut().enumerate() {
-        col.set_low();
-        for (row_idx, row) in rows.iter().enumerate() {
-            if row.read() == Level::Low {
-                thread::sleep(time::Duration::from_millis(50));
-                if row.read() == Level::Low {
-                    col.set_high();
-                    return Some(KEYPAD[row_idx][col_idx]);
-                }
-            }
-        }
-        col.set_high();
-    }
-    None
 }
 
