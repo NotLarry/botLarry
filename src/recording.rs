@@ -1,14 +1,11 @@
 use chrono::Local;
 use std::fs;
-use std::path::Path;
-use std::process::{Command, Child};
+use std::process::Command;
 use std::thread;
 use std::time::Duration;
-use rppal::gpio::{Gpio, InputPin, OutputPin, Level};
+use rppal::gpio::{InputPin, OutputPin, Level};
 
 /// Constants for keypad scanning
-const ROW_PINS: [u8; 4] = [16, 25, 24, 23];
-const COL_PINS: [u8; 3] = [22, 27, 17];
 const KEYPAD: [[char; 3]; 4] = [
     ['1', '2', '3'],
     ['4', '5', '6'],
@@ -34,9 +31,14 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
     None
 }
 
-/// Handle an unknown number call flow
-/// Returns true if recording was saved successfully
-pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bool {
+/// Handle an unknown number call flow using WAV + MP3 conversion.
+/// Uses pre-initialized GPIO (no reinit).
+pub fn handle_unknown_number(
+    rows: &Vec<InputPin>,
+    cols: &mut Vec<OutputPin>,
+    switch: &InputPin,
+    number: &str,
+) -> bool {
     let area_code = &number[0..3];
     let dir_path = format!("/botLarry/recordings/{}", area_code);
     let wav_path = format!("{}/{}.wav", dir_path, number);
@@ -44,7 +46,7 @@ pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bo
 
     fs::create_dir_all(&dir_path).expect("Failed to create recording directory");
 
-    // Ring once
+    // Ring tone
     let mut child = Command::new("sox")
         .args(["-n", "-t", "alsa", "hw:0,0", "synth", "2", "sin", "440", "sin", "480"])
         .spawn()
@@ -59,7 +61,7 @@ pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bo
         .spawn()
         .and_then(|mut c| c.wait());
 
-    // Start recording to .wav
+    // Start recording to WAV
     let mut arecord = Command::new("arecord")
         .args(["-D", "hw:0,0", "-f", "cd", &wav_path])
         .spawn()
@@ -67,19 +69,6 @@ pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bo
 
     println!("File path: {}", mp3_path);
     println!("🎙️  Recording... Press '#' to stop and save. Hang up to cancel.");
-
-    let rows: Vec<InputPin> = ROW_PINS
-        .iter()
-        .map(|&pin| gpio.get(pin).unwrap().into_input_pullup())
-        .collect();
-    let mut cols: Vec<OutputPin> = COL_PINS
-        .iter()
-        .map(|&pin| {
-            let mut col = gpio.get(pin).unwrap().into_output();
-            col.set_high();
-            col
-        })
-        .collect();
 
     // Wait loop
     loop {
@@ -90,9 +79,9 @@ pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bo
             return false;
         }
 
-        if let Some(key) = get_key(&rows, &mut cols) {
+        if let Some(key) = get_key(rows, cols) {
             if key == '#' {
-                println!("✅  '#' received — stopping and saving recording.");
+                println!("✅ '#' received — stopping and saving recording.");
                 break;
             }
         }
@@ -101,6 +90,8 @@ pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bo
     }
 
     let _ = arecord.kill();
+
+    // Convert to MP3
     let _ = Command::new("lame")
         .args([&wav_path, &mp3_path])
         .status()
