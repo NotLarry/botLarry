@@ -36,52 +36,63 @@ fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> {
 
 /// Handle an unknown number call flow
 /// Returns true if recording was saved successfully
-pub fn handle_unknown_number(
-    rows: &Vec<InputPin>,
-    cols: &mut Vec<OutputPin>,
-    switch: &InputPin,
-    number: &str,
-) -> bool {
+pub fn handle_unknown_number(gpio: &Gpio, switch: &InputPin, number: &str) -> bool {
     let area_code = &number[0..3];
     let dir_path = format!("/botLarry/recordings/{}", area_code);
-    let file_path = format!("{}/{}.mp3", dir_path, number);
+    let wav_path = format!("{}/{}.wav", dir_path, number);
+    let mp3_path = format!("{}/{}.mp3", dir_path, number);
 
     fs::create_dir_all(&dir_path).expect("Failed to create recording directory");
 
-    for _ in 0..1 {
-        let mut child = Command::new("sox")
-            .args(["-n", "-t", "alsa", "hw:0,0", "synth", "2", "sin", "440", "sin", "480"])
-            .spawn()
-            .expect("Failed to play ring tone");
-        thread::sleep(Duration::from_secs(2));
-        let _ = child.kill();
-        thread::sleep(Duration::from_secs(4));
-    }
+    // Ring once
+    let mut child = Command::new("sox")
+        .args(["-n", "-t", "alsa", "hw:0,0", "synth", "2", "sin", "440", "sin", "480"])
+        .spawn()
+        .expect("Failed to play ring tone");
+    thread::sleep(Duration::from_secs(2));
+    let _ = child.kill();
+    thread::sleep(Duration::from_secs(4));
 
+    // Beep
     let _ = Command::new("sox")
         .args(["-n", "-t", "alsa", "hw:0,0", "synth", "0.2", "sin", "1000"])
         .spawn()
         .and_then(|mut c| c.wait());
 
+    // Start recording to .wav
     let mut arecord = Command::new("arecord")
-        .args(["-D", "hw:0,0", "-f", "cd", &file_path])
+        .args(["-D", "hw:0,0", "-f", "cd", &wav_path])
         .spawn()
         .expect("Failed to start recording");
 
-    println!("File path: {}", file_path);
+    println!("File path: {}", mp3_path);
     println!("🎙️  Recording... Press '#' to stop and save. Hang up to cancel.");
 
+    let rows: Vec<InputPin> = ROW_PINS
+        .iter()
+        .map(|&pin| gpio.get(pin).unwrap().into_input_pullup())
+        .collect();
+    let mut cols: Vec<OutputPin> = COL_PINS
+        .iter()
+        .map(|&pin| {
+            let mut col = gpio.get(pin).unwrap().into_output();
+            col.set_high();
+            col
+        })
+        .collect();
+
+    // Wait loop
     loop {
         if switch.read() == Level::High {
             println!("📞 Hangup detected — discarding recording.");
             let _ = arecord.kill();
-            let _ = fs::remove_file(&file_path);
+            let _ = fs::remove_file(&wav_path);
             return false;
         }
 
-        if let Some(key) = get_key(rows, cols) {
+        if let Some(key) = get_key(&rows, &mut cols) {
             if key == '#' {
-                println!("✅ '#' received — stopping and saving recording.");
+                println!("✅  '#' received — stopping and saving recording.");
                 break;
             }
         }
@@ -90,7 +101,12 @@ pub fn handle_unknown_number(
     }
 
     let _ = arecord.kill();
+    let _ = Command::new("lame")
+        .args([&wav_path, &mp3_path])
+        .status()
+        .expect("Failed to encode MP3");
+
+    let _ = fs::remove_file(&wav_path);
     true
 }
-
 
