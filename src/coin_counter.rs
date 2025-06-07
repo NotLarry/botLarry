@@ -1,4 +1,4 @@
-use rppal::gpio::{Gpio, Trigger};
+use rppal::gpio::{Gpio, Level};
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::thread;
 use std::time::Duration;
@@ -8,33 +8,31 @@ pub fn start_coin_watcher(
     coin_inserted: Arc<AtomicBool>,
     coin_total: Arc<AtomicBool>,
 ) {
-    // Use 'static strings so they can be safely moved into the closure
-    let coin_defs: [(u8, &'static str); 3] = [
+    let coins = [
         (19, "Quarter"),
-        (13, "Dime"),
-        (12, "Nickel"),
+        (13, "Nickel"),
+        (12, "Dime"),
     ];
 
-    for (pin, name) in coin_defs {
-        let mut input_pin = gpio.get(pin).unwrap().into_input_pullup();
-        let coin_inserted = Arc::clone(&coin_inserted);
-        let coin_total = Arc::clone(&coin_total);
+    let mut last_state = [Level::High; 3];
+    let mut pins = Vec::new();
 
-        input_pin.set_async_interrupt(
-            Trigger::FallingEdge,
-            Some(Duration::from_millis(50)), // debounce
-            move |_| {
-                println!("🪙 {} inserted", name);
-                coin_inserted.store(true, Ordering::SeqCst);
-                coin_total.store(true, Ordering::SeqCst);
-            }
-        ).expect("Failed to set interrupt");
+    for (pin, _) in coins.iter() {
+        pins.push(gpio.get(*pin).unwrap().into_input_pullup());
     }
 
-    // Keep the thread alive so interrupts stay active
     thread::spawn(move || {
         loop {
-            thread::sleep(Duration::from_secs(1));
+            for (i, (pin, name)) in coins.iter().enumerate() {
+                let level = pins[i].read();
+                if level == Level::Low && last_state[i] == Level::High {
+                    println!("🪙 {} inserted", name);
+                    coin_inserted.store(true, Ordering::SeqCst);
+                    coin_total.store(true, Ordering::SeqCst);
+                }
+                last_state[i] = level;
+            }
+            thread::sleep(Duration::from_millis(50));
         }
     });
 }

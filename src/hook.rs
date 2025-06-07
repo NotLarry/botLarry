@@ -41,7 +41,7 @@ pub fn handle_hook_state(
             if coin_total.load(Ordering::SeqCst) {
                 println!("💰 Coins inserted. Triggering coin collection solenoid...");
 
-                if let Ok(mut solenoid) = gpio.get(6).map(|p| p.into_output()) {
+                if let Ok(mut solenoid) = gpio.get(5).map(|p| p.into_output()) {
                     solenoid.set_high();
                     thread::sleep(time::Duration::from_millis(300)); // Adjust as needed
                     solenoid.set_low();
