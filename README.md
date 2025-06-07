@@ -157,3 +157,21 @@ Telephone Pinout
                   Piezio +             [19] [20]      Piezio - 
 </pre>
 """
+
+apt/history.log.1.gz:Commandline: apt install smartmontools
+apt/history.log.1.gz:Commandline: apt install screen
+apt/history.log.1.gz:Commandline: apt install mc -y
+apt/history.log.1.gz:Commandline: apt install mpg123
+apt/history.log.1.gz:Commandline: apt install tmux
+apt/history.log.1.gz:Commandline: apt install sox libsox-fmt-alsa
+apt/history.log.2.gz:Commandline: apt install libsdl2-2.0-0 libsdl2-dev libsndfile1
+apt/history.log.2.gz:Commandline: apt install telnet
+apt/history.log.2.gz:Commandline: apt install nmap
+apt/history.log.2.gz:Commandline: apt install ffmpeg
+apt/history.log.2.gz:Commandline: apt install hostapd dnsmasq
+apt/history.log.2.gz:Commandline: apt-get install dphys-swapfile
+apt/history.log.3.gz:Commandline: apt install git
+apt/history.log.3.gz:Commandline: apt install vim
+apt/history.log.3.gz:Commandline: apt install sqlite
+apt/history.log.3.gz:Commandline: apt install btop
+
