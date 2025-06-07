@@ -1,54 +1,59 @@
-notlarry@botlarry /botLarry (feature/coin_counter) $ cat src/main.rs
-mod cli;
-mod gpio;
-mod db;
-mod keypad;
-mod hook;
-mod playback;
-mod tone;
-mod recording;
-//mod coin_collect;
-//mod tone;
-//mod coin;
-
-//use crate::coin::CoinInputs;
-use crate::cli::handle_cli_args;
-use crate::gpio::setup_gpio;
-use crate::db::init_db;
-use crate::hook::handle_hook_state;
-use crate::recording::handle_unknown_number;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-use std::{env};
-use ctrlc;
+use std::{thread, time};
+use rusqlite::Connection;
+use rppal::gpio::{InputPin, OutputPin, Gpio, Level};
 
-const SWITCH_PIN: u8 = 26;
+use crate::keypad::collect_digits;
 
-fn main() -> db::Result<()> {
-    tone::init_tone_thread("hw:0,0");
-    println!("✅ init_tone_thread called from main");
-
-    let args: Vec<String> = env::args().collect();
-
-    let (gpio, switch) = setup_gpio(SWITCH_PIN);
-    let conn = init_db()?;
-
-    if handle_cli_args(&args, &conn) {
-        return Ok(());
+/// Debounced check for off-hook state.
+pub fn is_offhook(switch: &InputPin) -> bool {
+    let mut count = 0;
+    for _ in 0..5 {
+        if switch.read() == Level::Low {
+            count += 1;
+        }
+        thread::sleep(time::Duration::from_millis(5));
     }
-
-    let running = Arc::new(AtomicBool::new(true));
-    let is_offhook = Arc::new(AtomicBool::new(false));
-
-    {
-        let running = running.clone();
-        ctrlc::set_handler(move || {
-            println!("\nCtrl+C pressed. Exiting...");
-            running.store(false, Ordering::SeqCst);
-        }).expect("Error setting Ctrl-C handler");
-    }
-
-    handle_hook_state(&gpio, &switch, running.clone(), is_offhook.clone(), &conn);
-
-    println!("👋 Goodbye. GPIO will clean up automatically.");
-    Ok(())
+    count >= 4
 }
+
+pub fn handle_hook_state(
+    gpio: &Gpio,
+    switch: &InputPin,
+    running: Arc<AtomicBool>,
+    is_offhook_flag: Arc<AtomicBool>,
+    conn: &Connection,
+    coin_total: Arc<AtomicBool>,
+) {
+    while running.load(Ordering::SeqCst) {
+        if is_offhook(switch) && !is_offhook_flag.load(Ordering::SeqCst) {
+            println!("📞 Offhook detected. Starting keypad entry...");
+            is_offhook_flag.store(true, Ordering::SeqCst);
+
+            while is_offhook(switch) && running.load(Ordering::SeqCst) {
+                collect_digits(gpio, &running, switch, conn);
+            }
+
+            println!("📴 Onhook detected. Resetting...");
+            is_offhook_flag.store(false, Ordering::SeqCst);
+
+            // ✅ Only trigger solenoid if coins were inserted
+            if coin_total.load(Ordering::SeqCst) {
+                println!("💰 Coins inserted. Triggering coin collection solenoid...");
+
+                if let Ok(mut solenoid) = gpio.get(6).map(|p| p.into_output()) {
+                    solenoid.set_high();
+                    thread::sleep(time::Duration::from_millis(300)); // Adjust as needed
+                    solenoid.set_low();
+                } else {
+                    eprintln!("⚠️ Failed to access GPIO 6 for solenoid.");
+                }
+
+                coin_total.store(false, Ordering::SeqCst);
+            }
+        }
+
+        thread::sleep(time::Duration::from_millis(100));
+    }
+}
+
