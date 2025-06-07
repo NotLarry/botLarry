@@ -9,9 +9,9 @@ pub fn start_coin_watcher(
     coin_total: Arc<AtomicBool>,
 ) {
     let coins = [
-        (19, "Quarter"),
+        (19, "Dime"),
         (13, "Nickel"),
-        (12, "Dime"),
+        (12, "Quarter"),
     ];
 
     let mut last_state = [Level::High; 3];
