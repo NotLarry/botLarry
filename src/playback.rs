@@ -5,6 +5,37 @@ use std::time::Duration;
 use rppal::gpio::{InputPin, Level};
 use once_cell::sync::Lazy;
 
+use std::sync::atomic::{AtomicUsize, Ordering};
+use rppal::gpio::{Trigger};
+
+// Volume levels: 0 = Low, 1 = Medium, 2 = High
+static VOLUME_LEVEL: AtomicUsize = AtomicUsize::new(2); // Start at High
+const VOLUME_VALUES: [u8; 3] = [20, 50, 100]; // Percentages
+
+pub fn setup_volume_button(gpio: &rppal::gpio::Gpio) {
+    let mut button_pin = gpio.get(6).unwrap().into_input_pullup();
+
+    button_pin
+        .set_async_interrupt(
+            Trigger::FallingEdge,
+            Some(Duration::from_millis(50)),  // debounce time
+            move |_| {
+                let current = VOLUME_LEVEL.load(Ordering::Relaxed);
+                let next = (current + 1) % VOLUME_VALUES.len();
+                VOLUME_LEVEL.store(next, Ordering::Relaxed);
+
+                let percent = VOLUME_VALUES[next];
+                let _ = Command::new("amixer")
+                    .args(["-c", "0", "sset", "Master", &format!("{}%", percent)])
+                    .status();
+
+                println!("🔊 Volume set to {}%", percent);
+            },
+        )
+
+        .expect("Failed to set interrupt on volume button");
+}
+
 // Shared process handle for any background tone (dial or ring)
 static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
 

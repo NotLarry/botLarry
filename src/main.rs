@@ -18,6 +18,10 @@ use crate::coin_counter::start_coin_watcher;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::{env, thread};
 use ctrlc;
+use rppal::gpio::Gpio;
+use crate::playback::setup_volume_button;
+
+
 
 const SWITCH_PIN: u8 = 26;
 
@@ -25,6 +29,9 @@ fn main() -> db::Result<()> {
     tone::init_tone_thread("hw:0,0");
     println!("✅ init_tone_thread called from main");
 
+    let gpio = Gpio::new().unwrap();
+    setup_volume_button(&gpio);
+    
     let args: Vec<String> = env::args().collect();
 
     let (gpio, switch) = setup_gpio(SWITCH_PIN);

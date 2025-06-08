@@ -23,7 +23,7 @@ pub fn start_coin_watcher(
 
     thread::spawn(move || {
         loop {
-            for (i, (pin, name)) in coins.iter().enumerate() {
+            for (i, (_pin, name)) in coins.iter().enumerate() {
                 let level = pins[i].read();
                 if level == Level::Low && last_state[i] == Level::High {
                     println!("🪙 {} inserted", name);
