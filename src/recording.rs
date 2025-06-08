@@ -55,11 +55,18 @@ pub fn handle_unknown_number(
     let _ = child.kill();
     thread::sleep(Duration::from_secs(4));
 
+    // Play unassigned message
+    let _ = Command::new("mpg123")
+        .args(["-a", "hw:0,0", "/botLarry/utility/unassigned.mp3"])
+        .status()
+        .expect("Failed to play unassigned.mp3");
+
     // Beep
     let _ = Command::new("sox")
         .args(["-n", "-t", "alsa", "hw:0,0", "synth", "0.2", "sin", "1000"])
         .spawn()
         .and_then(|mut c| c.wait());
+
 
     // Start recording to WAV
     let mut arecord = Command::new("arecord")
