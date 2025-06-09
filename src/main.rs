@@ -6,7 +6,8 @@ mod hook;
 mod playback;
 mod tone;
 mod recording;
-mod coin_counter; // ← Include your efficient coin watcher
+mod coin_counter;
+mod web; // Make sure you have a `mod web;` if it's in src/web.rs
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
@@ -14,29 +15,27 @@ use crate::db::init_db;
 use crate::hook::handle_hook_state;
 use crate::recording::handle_unknown_number;
 use crate::coin_counter::start_coin_watcher;
+use crate::playback::setup_volume_button;
+use crate::web::create_router;
 
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
-use std::{env, thread};
+use std::env;
 use ctrlc;
 use rppal::gpio::Gpio;
-use crate::playback::setup_volume_button;
-
-
-use crate::web::create_router;
 use rusqlite::Connection;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 use log::info;
 
 const SWITCH_PIN: u8 = 26;
 
-fn main() -> db::Result<()> {
+#[tokio::main]
+async fn main() -> db::Result<()> {
     tone::init_tone_thread("hw:0,0");
     println!("✅ init_tone_thread called from main");
 
     let gpio = Gpio::new().unwrap();
     setup_volume_button(&gpio);
-    
+
     let args: Vec<String> = env::args().collect();
 
     let (gpio, switch) = setup_gpio(SWITCH_PIN);
@@ -61,12 +60,17 @@ fn main() -> db::Result<()> {
     // 🪙 Start the interrupt-based coin watcher thread
     start_coin_watcher(gpio.clone(), Arc::new(AtomicBool::new(false)), coin_total.clone());
 
+    // 🌐 Start web server on a background task
+    tokio::spawn(async {
+        run_web_server().await;
+    });
+
     // ☎️ Start hook handling, which will read coin_total
     handle_hook_state(&gpio, &switch, running.clone(), is_offhook.clone(), &conn, coin_total.clone());
 
     println!("👋 Goodbye. GPIO will clean up automatically.");
     Ok(())
-
+}
 
 async fn run_web_server() {
     let conn = Arc::new(Mutex::new(Connection::open("data/calls.db").unwrap()));
@@ -75,8 +79,5 @@ async fn run_web_server() {
     info!("🌐 Web server running at http://{}/", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-
 }
 
