@@ -26,7 +26,7 @@ pub fn setup_volume_button(gpio: &rppal::gpio::Gpio) {
 
                 let percent = VOLUME_VALUES[next];
                 let _ = Command::new("amixer")
-                    .args(["-c", "0", "sset", "Master", &format!("{}%", percent)])
+                    .args(["-c", "0", "sset", "PCM", &format!("{}%", percent)])
                     .status();
 
                 println!("🔊 Volume set to {}%", percent);
