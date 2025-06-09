@@ -40,7 +40,7 @@ fn main() -> db::Result<()> {
     info!("🔧 botLarry starting up...");
 
     tone::init_tone_thread("hw:0,0");
-    println!("✅ init_tone_thread called from main");
+    info!("✅ init_tone_thread called from main");
 
     let gpio = Gpio::new().unwrap();
     setup_volume_button(&gpio);
@@ -61,7 +61,7 @@ fn main() -> db::Result<()> {
     {
         let running = running.clone();
         ctrlc::set_handler(move || {
-            println!("\nCtrl+C pressed. Exiting...");
+            info!("\nCtrl+C pressed. Exiting...");
             running.store(false, Ordering::SeqCst);
         }).expect("Error setting Ctrl-C handler");
     }
@@ -72,7 +72,7 @@ fn main() -> db::Result<()> {
     // ☎️ Start hook handling, which will read coin_total
     handle_hook_state(&gpio, &switch, running.clone(), is_offhook.clone(), &conn, coin_total.clone());
 
-    println!("👋 Goodbye. GPIO will clean up automatically.");
+    info!("👋 Goodbye. GPIO will clean up automatically.");
     Ok(())
 }
 

@@ -29,7 +29,7 @@ pub fn setup_volume_button(gpio: &rppal::gpio::Gpio) {
                     .args(["-c", "0", "sset", "PCM", &format!("{}%", percent)])
                     .status();
 
-                println!("🔊 Volume set to {}%", percent);
+                info!("🔊 Volume set to {}%", percent);
             },
         )
 
@@ -124,7 +124,7 @@ fn play_file_blocking(switch: &InputPin, path: &str, device: &str) -> bool {
         if switch.read() == Level::High {
             let _ = c.kill();
             let _ = c.wait();
-            println!("⏹️ On-hook detected. Playback interrupted.");
+            info!("⏹️ On-hook detected. Playback interrupted.");
             return false;
         }
 

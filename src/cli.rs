@@ -11,8 +11,8 @@ pub fn handle_cli_args(args: &[String], conn: &Connection) -> bool {
             }
             // Future CLI commands like `--add-note` can go here.
             _ => {
-                println!("❓ Unknown option: {}", args[1]);
-                println!("📌 Try: --show-calls");
+                info!("❓ Unknown option: {}", args[1]);
+                info!("📌 Try: --show-calls");
                 return true;
             }
         }

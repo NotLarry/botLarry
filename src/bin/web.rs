@@ -12,7 +12,7 @@ async fn main() {
     }));
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
-    println!("🌐 Web server running at http://{}/", addr);
+    info!("🌐 Web server running at http://{}/", addr);
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 

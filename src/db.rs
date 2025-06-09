@@ -34,10 +34,10 @@ pub fn show_call_logs(conn: &Connection) -> Result<()> {
         ))
     })?;
 
-    println!("\n 📄 Call Log:");
+    info!("\n 📄 Call Log:");
     for call in call_iter {
         let (id, areacode, number, recording, note, timestamp) = call?;
-        println!(
+        info!(
             "[{}] ({}) {} => {} [{}] at {}",
             id, areacode, number, recording, note, timestamp
         );

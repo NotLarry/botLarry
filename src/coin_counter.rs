@@ -26,7 +26,7 @@ pub fn start_coin_watcher(
             for (i, (_pin, name)) in coins.iter().enumerate() {
                 let level = pins[i].read();
                 if level == Level::Low && last_state[i] == Level::High {
-                    println!("🪙 {} inserted", name);
+                    info!("🪙 {} inserted", name);
                     coin_inserted.store(true, Ordering::SeqCst);
                     coin_total.store(true, Ordering::SeqCst);
                 }

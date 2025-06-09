@@ -37,7 +37,7 @@ pub fn setup_volume_button(shared_volume: Arc<Mutex<VolumeLevel>>) {
     pin.set_async_interrupt(Trigger::RisingEdge, move |_| {
         let mut volume = shared.lock().unwrap();
         *volume = volume.next();
-        println!("Volume changed to: {:?}", volume.as_percentage());
+        info!("Volume changed to: {:?}", volume.as_percentage());
         // Optionally set system volume here, depending on playback method
     }).expect("Failed to set up interrupt");
 
