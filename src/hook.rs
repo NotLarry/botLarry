@@ -48,7 +48,7 @@ pub fn handle_hook_state(
                     thread::sleep(time::Duration::from_millis(300)); // Adjust as needed
                     solenoid.set_low();
                 } else {
-                    einfo!("⚠️ Failed to access GPIO 6 for solenoid.");
+                    error!("⚠️ Failed to access GPIO 6 for solenoid.");
                 }
 
                 coin_total.store(false, Ordering::SeqCst);
