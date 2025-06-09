@@ -22,6 +22,11 @@ use rppal::gpio::Gpio;
 use crate::playback::setup_volume_button;
 
 
+use crate::web::create_router;
+use rusqlite::Connection;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use log::info;
 
 const SWITCH_PIN: u8 = 26;
 
@@ -61,5 +66,17 @@ fn main() -> db::Result<()> {
 
     println!("👋 Goodbye. GPIO will clean up automatically.");
     Ok(())
+
+
+async fn run_web_server() {
+    let conn = Arc::new(Mutex::new(Connection::open("data/calls.db").unwrap()));
+    let app = create_router(conn);
+    let addr = ([0, 0, 0, 0], 3000).into();
+    info!("🌐 Web server running at http://{}/", addr);
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+
 }
 

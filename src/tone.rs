@@ -44,7 +44,11 @@ pub fn init_tone_thread(audio_device: &'static str) {
     let (tx, rx): (Sender<char>, Receiver<char>) = std::sync::mpsc::channel();
 
     SENDER.set(Mutex::new(tx)).unwrap_or_else(|_| {
+<<<<<<< Updated upstream
         eprintln!("⚠️ Tone thread already initialized");
+=======
+        error!("⚠️ Tone thread already initialized");
+>>>>>>> Stashed changes
     });
 
     thread::spawn(move || {
@@ -82,7 +86,11 @@ pub fn play_dtmf_tone(digit: char) {
     if let Some(sender) = SENDER.get() {
         let _ = sender.lock().unwrap().send(digit);
     } else {
+<<<<<<< Updated upstream
         eprintln!("❌ Tone thread not initialized");
+=======
+        error!("❌ Tone thread not initialized");
+>>>>>>> Stashed changes
     }
 }
 
