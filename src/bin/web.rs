@@ -2,6 +2,8 @@ use axum::{response::Html, routing::get, Router};
 use rusqlite::Connection;
 use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::Mutex;
+use log::{info, warn, error, debug};
+
 
 #[tokio::main]
 async fn main() {

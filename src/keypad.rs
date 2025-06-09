@@ -4,6 +4,8 @@ use std::{thread, time::Duration};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
 use chrono::Local;
+use log::{info, warn, error, debug};
+
 
 use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};
 use crate::tone::play_dtmf_tone;

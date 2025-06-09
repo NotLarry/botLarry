@@ -1,6 +1,8 @@
 // src/cli.rs
 use rusqlite::Connection;
 use crate::db::show_call_logs;
+use log::{info, warn, error, debug};
+
 
 pub fn handle_cli_args(args: &[String], conn: &Connection) -> bool {
     if args.len() > 1 {

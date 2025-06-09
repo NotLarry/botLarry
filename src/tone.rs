@@ -3,6 +3,8 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use once_cell::sync::Lazy;
+use log::{info, warn, error, debug};
+
 
 static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
 static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));

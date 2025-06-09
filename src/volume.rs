@@ -2,6 +2,8 @@ use std::sync::{Arc, Mutex};
 use rppal::gpio::{Gpio, InputPin, Trigger};
 use std::thread;
 use std::time::Duration;
+use log::{info, warn, error, debug};
+
 
 #[derive(Clone, Copy)]
 pub enum VolumeLevel {

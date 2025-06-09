@@ -2,6 +2,8 @@ use rppal::gpio::{Gpio, Level};
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::thread;
 use std::time::Duration;
+use log::{info, warn, error, debug};
+
 
 pub fn start_coin_watcher(
     gpio: Gpio,
