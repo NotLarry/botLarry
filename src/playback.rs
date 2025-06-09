@@ -7,6 +7,8 @@ use once_cell::sync::Lazy;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use rppal::gpio::{Trigger};
+use log::{info, warn, error, debug};
+
 
 // Volume levels: 0 = Low, 1 = Medium, 2 = High
 static VOLUME_LEVEL: AtomicUsize = AtomicUsize::new(2); // Start at High
@@ -29,7 +31,7 @@ pub fn setup_volume_button(gpio: &rppal::gpio::Gpio) {
                     .args(["-c", "0", "sset", "PCM", &format!("{}%", percent)])
                     .status();
 
-                println!("🔊 Volume set to {}%", percent);
+                info!("🔊 Volume set to {}%", percent);
             },
         )
 
@@ -124,7 +126,7 @@ fn play_file_blocking(switch: &InputPin, path: &str, device: &str) -> bool {
         if switch.read() == Level::High {
             let _ = c.kill();
             let _ = c.wait();
-            println!("⏹️ On-hook detected. Playback interrupted.");
+            info!("⏹️ On-hook detected. Playback interrupted.");
             return false;
         }
 

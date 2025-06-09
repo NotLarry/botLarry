@@ -14,3 +14,5 @@ alsa = "0.7"
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.7", features = ["tokio"] }
 chrono = "0.4.41"
+log = "0.4"
+simplelog = "0.12"

@@ -3,6 +3,8 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use once_cell::sync::Lazy;
+use log::{info, warn, error, debug};
+
 
 static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
 static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
@@ -44,13 +46,13 @@ pub fn init_tone_thread(audio_device: &'static str) {
     let (tx, rx): (Sender<char>, Receiver<char>) = std::sync::mpsc::channel();
 
     SENDER.set(Mutex::new(tx)).unwrap_or_else(|_| {
-        eprintln!("⚠️ Tone thread already initialized");
+        error!("⚠️ Tone thread already initialized");
     });
 
     thread::spawn(move || {
-        println!("🎧 Tone thread started"); // confirm tone thread launched
+        info!("🎧 Tone thread started"); // confirm tone thread launched
         for digit in rx {
-            println!("🎵 Playing tone for: {}", digit);
+            info!("🎵 Playing tone for: {}", digit);
             let dtmf = match digit {
                 '0'..='9' | '*' | '#' => digit.to_string(),
                 _ => continue,
@@ -78,11 +80,11 @@ let mut child = Command::new("sox")
 }
 
 pub fn play_dtmf_tone(digit: char) {
-    println!("📨 Sending digit to tone thread: {}", digit);
+    info!("📨 Sending digit to tone thread: {}", digit);
     if let Some(sender) = SENDER.get() {
         let _ = sender.lock().unwrap().send(digit);
     } else {
-        eprintln!("❌ Tone thread not initialized");
+        error!("❌ Tone thread not initialized");
     }
 }
 

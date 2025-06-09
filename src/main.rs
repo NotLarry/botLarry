@@ -20,14 +20,27 @@ use std::{env, thread};
 use ctrlc;
 use rppal::gpio::Gpio;
 use crate::playback::setup_volume_button;
-
+use simplelog::*;
+use std::fs::File;
+use log::{info, warn, error};
 
 
 const SWITCH_PIN: u8 = 26;
 
 fn main() -> db::Result<()> {
+
+    CombinedLogger::init(vec![
+        WriteLogger::new(
+            LevelFilter::Info,
+            Config::default(),
+            File::create("/var/log/botLarry.log").expect("Could not create log file"),
+        ),
+    ]).expect("Logger failed to initialize");
+
+    info!("🔧 botLarry starting up...");
+
     tone::init_tone_thread("hw:0,0");
-    println!("✅ init_tone_thread called from main");
+    info!("✅ init_tone_thread called from main");
 
     let gpio = Gpio::new().unwrap();
     setup_volume_button(&gpio);
@@ -48,7 +61,7 @@ fn main() -> db::Result<()> {
     {
         let running = running.clone();
         ctrlc::set_handler(move || {
-            println!("\nCtrl+C pressed. Exiting...");
+            info!("\nCtrl+C pressed. Exiting...");
             running.store(false, Ordering::SeqCst);
         }).expect("Error setting Ctrl-C handler");
     }
@@ -59,7 +72,7 @@ fn main() -> db::Result<()> {
     // ☎️ Start hook handling, which will read coin_total
     handle_hook_state(&gpio, &switch, running.clone(), is_offhook.clone(), &conn, coin_total.clone());
 
-    println!("👋 Goodbye. GPIO will clean up automatically.");
+    info!("👋 Goodbye. GPIO will clean up automatically.");
     Ok(())
 }
 

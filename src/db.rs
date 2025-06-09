@@ -1,5 +1,7 @@
 use rusqlite::{Connection};
 pub use rusqlite::Result;
+use log::{info, warn, error, debug};
+
 
 pub fn init_db() -> Result<Connection> {
     std::fs::create_dir_all("data").map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
@@ -34,10 +36,10 @@ pub fn show_call_logs(conn: &Connection) -> Result<()> {
         ))
     })?;
 
-    println!("\n 📄 Call Log:");
+    info!("\n 📄 Call Log:");
     for call in call_iter {
         let (id, areacode, number, recording, note, timestamp) = call?;
-        println!(
+        info!(
             "[{}] ({}) {} => {} [{}] at {}",
             id, areacode, number, recording, note, timestamp
         );

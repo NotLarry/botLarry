@@ -4,6 +4,8 @@ use std::{thread, time::Duration};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
 use chrono::Local;
+use log::{info, warn, error, debug};
+
 
 use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};
 use crate::tone::play_dtmf_tone;
@@ -62,13 +64,13 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
         .collect();
 
     let mut digits = Vec::new();
-    println!("⌨️  Waiting for 10 digits...");
+    info!("⌨️  Waiting for 10 digits...");
 
     start_dial_tone("hw:0,0");
 
     while digits.len() < 10 {
         if !running.load(Ordering::SeqCst) || switch.read() == Level::High {
-            println!("❌ Digit entry canceled (on-hook or Ctrl+C).");
+            info!("❌ Digit entry canceled (on-hook or Ctrl+C).");
             stop_dial_tone();
             return;
         }
@@ -80,7 +82,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
                 }
                 play_dtmf_tone(key);
                 digits.push(key);
-                println!("✅ Key pressed: {}", key);
+                info!("✅ Key pressed: {}", key);
                 thread::sleep(Duration::from_millis(300));
             }
         }
@@ -89,7 +91,7 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
     }
 
     let digit_string: String = digits.iter().collect();
-    println!("📋 Digits recorded: {}", digit_string);
+    info!("📋 Digits recorded: {}", digit_string);
 
     let (areacode, phonenumber) = digit_string.split_at(3);
 
@@ -104,10 +106,10 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
 
     match existing {
         Some(path) => {
-            println!("📀 Number already logged. Recording path: {}", path);
-            println!("▶️ Playing recording: {}", path);
+            info!("📀 Number already logged. Recording path: {}", path);
+            info!("▶️ Playing recording: {}", path);
             play_digital_ring_then_mp3(switch, &path);
-            println!("✅ Playback finished.");
+            info!("✅ Playback finished.");
         }
         None => {
             if handle_unknown_number(&rows, &mut cols, switch, &digit_string) {
@@ -117,9 +119,9 @@ pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn
                     params![areacode, phonenumber, &recording_path],
                 ).expect("Failed to insert call record");
 
-                println!("💾 New call logged. Recording path: {}", recording_path);
+                info!("💾 New call logged. Recording path: {}", recording_path);
             } else {
-                println!("⚠️ Recording aborted — not logging call.");
+                info!("⚠️ Recording aborted — not logging call.");
             }
         }
     }

@@ -4,6 +4,8 @@ use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use rppal::gpio::{InputPin, OutputPin, Level};
+use log::{info, warn, error, debug};
+
 
 /// Constants for keypad scanning
 const KEYPAD: [[char; 3]; 4] = [
@@ -74,13 +76,13 @@ pub fn handle_unknown_number(
         .spawn()
         .expect("Failed to start recording");
 
-    println!("File path: {}", mp3_path);
-    println!("🎙️  Recording... Press '#' to stop and save. Hang up to cancel.");
+    info!("File path: {}", mp3_path);
+    info!("🎙️  Recording... Press '#' to stop and save. Hang up to cancel.");
 
     // Wait loop
     loop {
         if switch.read() == Level::High {
-            println!("📞 Hangup detected — discarding recording.");
+            info!("📞 Hangup detected — discarding recording.");
             let _ = arecord.kill();
             let _ = fs::remove_file(&wav_path);
             return false;
@@ -88,7 +90,7 @@ pub fn handle_unknown_number(
 
         if let Some(key) = get_key(rows, cols) {
             if key == '#' {
-                println!("✅ '#' received — stopping and saving recording.");
+                info!("✅ '#' received — stopping and saving recording.");
                 break;
             }
         }
