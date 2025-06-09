@@ -20,12 +20,25 @@ use std::{env, thread};
 use ctrlc;
 use rppal::gpio::Gpio;
 use crate::playback::setup_volume_button;
-
+use simplelog::*;
+use std::fs::File;
+use log::{info, warn, error};
 
 
 const SWITCH_PIN: u8 = 26;
 
 fn main() -> db::Result<()> {
+
+    CombinedLogger::init(vec![
+        WriteLogger::new(
+            LevelFilter::Info,
+            Config::default(),
+            File::create("/var/log/botLarry.log").expect("Could not create log file"),
+        ),
+    ]).expect("Logger failed to initialize");
+
+    info!("🔧 botLarry starting up...");
+
     tone::init_tone_thread("hw:0,0");
     println!("✅ init_tone_thread called from main");
 
