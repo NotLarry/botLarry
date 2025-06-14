@@ -11,7 +11,10 @@ pub fn handle_cli_args(args: &[String], conn: &Connection) -> bool {
                 show_call_logs(conn).expect("Failed to show call logs");
                 return true;
             }
-            // Future CLI commands like `--add-note` can go here.
+            "-V" | "--version" => {
+                println!("botLarry version {}", env!("CARGO_PKG_VERSION"));
+                return true;
+            }
             _ => {
                 info!("❓ Unknown option: {}", args[1]);
                 info!("📌 Try: --show-calls");
@@ -21,4 +24,5 @@ pub fn handle_cli_args(args: &[String], conn: &Connection) -> bool {
     }
     false
 }
+
 

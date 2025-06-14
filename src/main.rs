@@ -7,6 +7,7 @@ mod playback;
 mod tone;
 mod recording;
 mod coin_counter; // ← Include your efficient coin watcher
+mod web;
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
@@ -15,7 +16,7 @@ use crate::hook::handle_hook_state;
 use crate::recording::handle_unknown_number;
 use crate::coin_counter::start_coin_watcher;
 
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{atomic::{AtomicBool, Ordering}};
 use std::{env, thread};
 use ctrlc;
 use rppal::gpio::Gpio;
@@ -23,6 +24,8 @@ use crate::playback::setup_volume_button;
 use simplelog::*;
 use std::fs::File;
 use log::{info, warn, error};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 
 const SWITCH_PIN: u8 = 26;
@@ -41,6 +44,11 @@ fn main() -> db::Result<()> {
 
     tone::init_tone_thread("hw:0,0");
     info!("✅ init_tone_thread called from main");
+
+    let conn = Arc::new(Mutex::new(init_db()?));
+
+        // Clone for use in the web server thread
+            web::spawn_web_server_thread(conn.clone());
 
     let gpio = Gpio::new().unwrap();
     setup_volume_button(&gpio);
