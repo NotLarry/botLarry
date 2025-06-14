@@ -1,10 +1,9 @@
-use chrono::Local;
 use std::fs;
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use rppal::gpio::{InputPin, OutputPin, Level};
-use log::{info, warn, error, debug};
+use log::info;
 
 
 /// Constants for keypad scanning

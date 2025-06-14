@@ -1,8 +1,8 @@
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use std::{thread, time};
 use rusqlite::Connection;
-use rppal::gpio::{InputPin, OutputPin, Gpio, Level};
-use log::{info, warn, error, debug};
+use rppal::gpio::{InputPin, Gpio, Level};
+use log::{info, error};
 
 
 use crate::keypad::collect_digits;

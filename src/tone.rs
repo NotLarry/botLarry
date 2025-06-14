@@ -3,7 +3,7 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use once_cell::sync::Lazy;
-use log::{info, warn, error, debug};
+use log::{info, error};
 
 
 static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();

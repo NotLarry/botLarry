@@ -3,8 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{thread, time::Duration};
 use rusqlite::{params, Connection};
 use rusqlite::OptionalExtension;
-use chrono::Local;
-use log::{info, warn, error, debug};
+use log::info;
 
 
 use crate::playback::{start_dial_tone, stop_dial_tone, play_digital_ring_then_mp3};

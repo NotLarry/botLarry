@@ -1,6 +1,6 @@
 use rusqlite::{Connection};
 pub use rusqlite::Result;
-use log::{info, warn, error, debug};
+use log::info;
 
 
 pub fn init_db() -> Result<Connection> {

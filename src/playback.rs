@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use rppal::gpio::{Trigger};
-use log::{info, warn, error, debug};
+use log::info;
 
 
 // Volume levels: 0 = Low, 1 = Medium, 2 = High

@@ -13,17 +13,16 @@ use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;
 use crate::db::init_db;
 use crate::hook::handle_hook_state;
-use crate::recording::handle_unknown_number;
 use crate::coin_counter::start_coin_watcher;
 
 use std::sync::{atomic::{AtomicBool, Ordering}};
-use std::{env, thread};
+use std::env;
 use ctrlc;
 use rppal::gpio::Gpio;
 use crate::playback::setup_volume_button;
 use simplelog::*;
 use std::fs::File;
-use log::{info, warn, error};
+use log::info;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
