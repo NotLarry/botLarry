@@ -1,6 +1,6 @@
 [package]
 name = "botLarry"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["NotLarry <notlarry@hotmail.com>"]
 edition = "2021"
 

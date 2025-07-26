@@ -4,8 +4,8 @@ use log::info;
 
 
 pub fn init_db() -> Result<Connection> {
-    std::fs::create_dir_all("data").map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
-    let conn = Connection::open("data/calls.db")?;
+    std::fs::create_dir_all("/botLarry/data").map_err(|e| rusqlite::Error::ToSqlConversionFailure(Box::new(e)))?;
+    let conn = Connection::open("/botLarry/data/calls.db")?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS calls (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
