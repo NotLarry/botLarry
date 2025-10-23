@@ -24,6 +24,7 @@ pub fn start_dial_tone(audio_device: &str) {
             "synth", "-",  // Continuous
             "sin", "350",
             "sin", "440",
+            "gain", SOX_GAIN_DB,
         ])
         .spawn()
         .expect("Failed to start dial tone");
@@ -67,6 +68,7 @@ let mut child = Command::new("sox")
         "synth", "0.2",
         "sin", &dtmf_freq1(&dtmf),
         "sin", &dtmf_freq2(&dtmf),
+        "gain", SOX_GAIN_DB,
     ])
     .stdout(Stdio::null())
     .stderr(Stdio::null())
