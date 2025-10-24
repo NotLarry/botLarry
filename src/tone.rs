@@ -4,7 +4,7 @@ use std::sync::{Mutex, OnceLock};
 use std::thread;
 //use once_cell::sync::Lazy;
 use log::{info, error};
-
+use crate::audio::SOX_GAIN_DB;
 
 static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
 //static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
@@ -41,7 +41,6 @@ static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
 
 
 
-
 pub fn init_tone_thread(audio_device: &'static str) {
     let (tx, rx): (Sender<char>, Receiver<char>) = std::sync::mpsc::channel();
 
@@ -67,6 +66,7 @@ let mut child = Command::new("sox")
         "synth", "0.2",
         "sin", &dtmf_freq1(&dtmf),
         "sin", &dtmf_freq2(&dtmf),
+        "gain", SOX_GAIN_DB,
     ])
     .stdout(Stdio::null())
     .stderr(Stdio::null())

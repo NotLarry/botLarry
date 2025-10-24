@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use rppal::gpio::{Trigger};
 use log::info;
-
+use crate::audio::SOX_GAIN_DB;
 
 // Volume levels: 0 = Low, 1 = Medium, 2 = High
 static VOLUME_LEVEL: AtomicUsize = AtomicUsize::new(2); // Start at High
@@ -50,6 +50,7 @@ pub fn start_dial_tone(audio_device: &str) {
             "synth", "0",  // infinite duration
             "sin", "350",
             "sin", "440",
+            "gain", SOX_GAIN_DB,
             "channels", "2",
         ])
         .stdout(Stdio::null())
@@ -70,6 +71,7 @@ pub fn start_ringing_tone(audio_device: &str) {
             "synth", "2.0", "sin", "440", "sin", "480",  // 2 seconds tone
             "pad", "0", "4.0",                            // 4 seconds silence
             "repeat", "9999",                             // loop
+            "gain", SOX_GAIN_DB,
             "channels", "2",
         ])
         .stdout(Stdio::null())
