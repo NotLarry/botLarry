@@ -38,14 +38,14 @@ pub fn get_key(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> Option<char> 
     None
 }
 
-pub fn wait_for_keypress(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> char {
-    loop {
-        if let Some(key) = get_key(rows, cols) {
-            return key;
-        }
-        thread::sleep(Duration::from_millis(50));
-    }
-}
+//pub fn wait_for_keypress(rows: &Vec<InputPin>, cols: &mut Vec<OutputPin>) -> char {
+//   loop {
+//        if let Some(key) = get_key(rows, cols) {
+//            return key;
+//        }
+//        thread::sleep(Duration::from_millis(50));
+//    }
+//}
 
 pub fn collect_digits(gpio: &Gpio, running: &AtomicBool, switch: &InputPin, conn: &Connection) {
     let rows: Vec<InputPin> = ROW_PINS
