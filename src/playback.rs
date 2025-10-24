@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use rppal::gpio::{Trigger};
 use log::info;
-
+use crate::audio::SOX_GAIN_DB;
 
 // Volume levels: 0 = Low, 1 = Medium, 2 = High
 static VOLUME_LEVEL: AtomicUsize = AtomicUsize::new(2); // Start at High
