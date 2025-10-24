@@ -50,6 +50,7 @@ pub fn start_dial_tone(audio_device: &str) {
             "synth", "0",  // infinite duration
             "sin", "350",
             "sin", "440",
+            "gain", SOX_GAIN_DB,
             "channels", "2",
         ])
         .stdout(Stdio::null())
@@ -70,6 +71,7 @@ pub fn start_ringing_tone(audio_device: &str) {
             "synth", "2.0", "sin", "440", "sin", "480",  // 2 seconds tone
             "pad", "0", "4.0",                            // 4 seconds silence
             "repeat", "9999",                             // loop
+            "gain", SOX_GAIN_DB,
             "channels", "2",
         ])
         .stdout(Stdio::null())

@@ -49,7 +49,7 @@ pub fn handle_unknown_number(
 
     // Ring tone
     let mut child = Command::new("sox")
-        .args(["-n", "-t", "alsa", "hw:0,0", "synth", "2", "sin", "440", "sin", "480"])
+        .args(["-n", "-t", "alsa", "hw:0,0", "synth", "2", "sin", "440", "sin", "480","gain", SOX_GAIN_DB])
         .spawn()
         .expect("Failed to play ring tone");
     thread::sleep(Duration::from_secs(2));
@@ -64,7 +64,7 @@ pub fn handle_unknown_number(
 
     // Beep
     let _ = Command::new("sox")
-        .args(["-n", "-t", "alsa", "hw:0,0", "synth", "0.2", "sin", "1000"])
+        .args(["-n", "-t", "alsa", "hw:0,0", "synth", "0.2", "sin", "1000","gain", SOX_GAIN_DB])
         .spawn()
         .and_then(|mut c| c.wait());
 
