@@ -4,7 +4,7 @@ use std::thread;
 use std::time::Duration;
 use rppal::gpio::{InputPin, OutputPin, Level};
 use log::info;
-
+use crate::audio::SOX_GAIN_DB;
 
 /// Constants for keypad scanning
 const KEYPAD: [[char; 3]; 4] = [

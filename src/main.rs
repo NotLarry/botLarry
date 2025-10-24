@@ -8,6 +8,7 @@ mod tone;
 mod recording;
 mod coin_counter; // ← Include your efficient coin watcher
 mod web;
+mod audio;
 
 use crate::cli::handle_cli_args;
 use crate::gpio::setup_gpio;

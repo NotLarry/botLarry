@@ -4,7 +4,7 @@ use std::sync::{Mutex, OnceLock};
 use std::thread;
 use once_cell::sync::Lazy;
 use log::{info, error};
-
+use crate::audio::SOX_GAIN_DB;
 
 static SENDER: OnceLock<Mutex<Sender<char>>> = OnceLock::new();
 static DIAL_TONE_PROCESS: Lazy<Mutex<Option<Child>>> = Lazy::new(|| Mutex::new(None));
